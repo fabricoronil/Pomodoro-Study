@@ -5,11 +5,15 @@
 }
 
 body {
-    font-family: 'Arial', sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
     color: white;
     overflow-x: hidden;
-    height: 100vh;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
 }
 
 .screen {
@@ -645,3 +649,166 @@ body {
     
 }
 
+/* Estilos Generales */
+
+.historial-container {
+    width: 100%;
+    max-width: 800px;
+    background-color: #121212;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid #333;
+}
+
+/* Encabezado */
+.historial-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.historial-header h2 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.historial-header p {
+    margin: 4px 0 0;
+    color: #888;
+}
+
+/* Selector de Vista (Mes, Semana, Día) */
+.vista-selector {
+    display: flex;
+    background-color: #222;
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 24px;
+}
+
+.vista-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background-color: transparent;
+    color: #aaa;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.vista-btn.active {
+    background-color: #444;
+    color: #ffffff;
+}
+
+/* Selector de Fecha */
+.fecha-selector {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.fecha-selector label {
+    color: #aaa;
+    font-size: 14px;
+}
+
+#date-input {
+    background-color: #222;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 8px;
+    border-radius: 6px;
+    font-family: inherit;
+}
+
+/* Resumen en Grid */
+.resumen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.resumen-card {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.resumen-card .icon {
+    font-size: 28px;
+    color: #888;
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-label {
+    font-size: 12px;
+    color: #aaa;
+}
+
+.card-value {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* Distribución por Materia */
+.distribucion-container {
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    border: 1px solid #333;
+}
+
+.distribucion-titulo {
+    font-size: 16px;
+    margin: 0 0 16px;
+    color: #ccc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.materia-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #333;
+}
+
+.materia-item:last-child {
+    border-bottom: none;
+}
+
+.materia-stats {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.materia-stats .tiempo {
+    color: #ccc;
+    font-weight: bold;
+}
+
+.materia-stats .porcentaje {
+    background-color: #333;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}

@@ -10,6 +10,7 @@
     <title>Pomodoro App - Fabri Coronil</title>
     <!-- Enlace a la hoja de estilos CSS que da diseño a la página. -->
     <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
 
@@ -160,14 +161,90 @@
     <!-- PANTALLA DE HISTORIAL (#historyScreen)                            -->
     <!-- =================================================================== -->
     <div id="historyScreen" class="screen">
-        <div class="history-container">
-            <h2 class="history-title">Historial de Pomodoros</h2>
-            <div class="history-list" id="historyList">
-                <!-- Los elementos del historial se cargarán aquí dinámicamente -->
-                <p class="no-history-message">Aún no hay pomodoros completados.</p>
+        <section class="historial-container">
+            <header class="historial-header">
+                <h2>Historial de Pomodoros</h2>
+                <p>Visualiza tus sesiones de estudio por mes, semana o día.</p>
+            </header>
+
+            <div class="vista-selector">
+                <button class="vista-btn" data-vista="mes">Mes</button>
+                <button class="vista-btn" data-vista="semana">Semana</button>
+                <button class="vista-btn active" data-vista="dia">Día</button>
+            </div>
+
+            <div class="fecha-selector">
+                <label for="date-input">Seleccionar Día:</label>
+                <input type="date" id="date-input" value="2024-09-10">
+            </div>
+
+            <div class="resumen-grid">
+                <div class="resumen-card">
+                    <span class="material-icons icon">schedule</span>
+                    <div class="card-content">
+                        <span class="card-label">Total de Horas</span>
+                        <span class="card-value">3.8h</span>
+                    </div>
+                </div>
+                <div class="resumen-card">
+                    <span class="material-icons icon">bar_chart</span>
+                    <div class="card-content">
+                        <span class="card-label">Sesiones</span>
+                        <span class="card-value">3</span>
+                    </div>
+                </div>
+                <div class="resumen-card">
+                    <span class="material-icons icon">library_books</span>
+                    <div class="card-content">
+                        <span class="card-label">Materias</span>
+                        <span class="card-value">3</span>
+                    </div>
+                </div>
+                <div class="resumen-card">
+                    <span class="material-icons icon">today</span>
+                    <div class="card-content">
+                        <span class="card-label">Promedio/Sesión</span>
+                        <span class="card-value">77min</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="distribucion-container">
+                <h3 class="distribucion-titulo">
+                    <span class="material-icons">school</span>
+                    Distribución por Materia - Universidad de la Cuenca
+                </h3>
+                <div class="materia-item">
+                    <span>Programación Estructurada</span>
+                    <div class="materia-stats">
+                        <span class="tiempo">45min</span>
+                        <span class="porcentaje">19.6%</span>
+                    </div>
+                </div>
+                <div class="materia-item">
+                    <span>Análisis Matemático</span>
+                    <div class="materia-stats">
+                        <span class="tiempo">1h 30min</span>
+                        <span class="porcentaje">39.1%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="distribucion-container">
+                <h3 class="distribucion-titulo">
+                     <span class="material-icons">code</span>
+                    Distribución con la UTN
+                </h3>
+                <div class="materia-item">
+                    <span>React y Node.js</span>
+                    <div class="materia-stats">
+                        <span class="tiempo">1h 35min</span>
+                        <span class="porcentaje">41.3%</span>
+                    </div>
+                </div>
             </div>
             <button class="back-btn" onclick="goBackToWelcome()">Volver al Inicio</button>
-        </div>
+        </section>
     </div>
 
     <!-- =================================================================== -->

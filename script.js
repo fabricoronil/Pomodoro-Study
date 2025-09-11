@@ -444,94 +444,48 @@ function updateDisplay() {
 document.addEventListener('DOMContentLoaded', function() {
     loadHistory();
     currentScreen = 'welcome';
+
+    const vistaBotones = document.querySelectorAll('.vista-btn');
+    const fechaInput = document.getElementById('date-input');
+    const fechaLabel = document.querySelector('.fecha-selector label');
+
+    vistaBotones.forEach(boton => {
+        boton.addEventListener('click', () => {
+            // Quita la clase activa de todos los botones
+            vistaBotones.forEach(btn => btn.classList.remove('active'));
+            // Agrega la clase activa al botón presionado
+            boton.classList.add('active');
+
+            const vistaSeleccionada = boton.dataset.vista;
+            
+            // Cambia el tipo de input y la etiqueta según la vista
+            switch (vistaSeleccionada) {
+                case 'dia':
+                    fechaLabel.textContent = 'Seleccionar Día:';
+                    fechaInput.type = 'date';
+                    break;
+                case 'semana':
+                    fechaLabel.textContent = 'Seleccionar Semana:';
+                    fechaInput.type = 'week';
+                    break;
+
+                case 'mes':
+                    fechaLabel.textContent = 'Seleccionar Mes:';
+                    fechaInput.type = 'month';
+                    break;
+            }
+            
+            // Aquí iría la lógica para cargar los datos de la fecha seleccionada
+            console.log(`Vista cambiada a: ${vistaSeleccionada}`);
+            // Ejemplo: fetchHistoryData(vistaSeleccionada, fechaInput.value);
+        });
+    });
+
+    // Evento para cuando cambia la fecha
+    fechaInput.addEventListener('change', () => {
+        console.log(`Fecha seleccionada: ${fechaInput.value}`);
+        // Aquí también iría la lógica para recargar los datos
+    });
 });
 
-function pauseTimer() {
-    if (!isRunning) return;
-    
-    isRunning = false;
-    clearInterval(timer);
-    timer = null;
-    document.getElementById('playPauseBtn').textContent = '▶️';
-}
 
-function toggleTimer() {
-    if (isRunning) {
-        pauseTimer();
-    } else {
-        startTimer();
-    }
-}
-
-function resetTimer() {
-    pauseTimer();
-    
-    if (isWorkTime) {
-        currentTime = workDuration;
-    } else {
-        currentTime = breakDuration;
-    }
-    
-    updateDisplay();
-}
-
-function completeSession() {
-    pauseTimer();
-    
-    try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.5);
-    } catch (e) {
-        console.log('Audio no disponible');
-    }
-    
-    if (isWorkTime) {
-        isWorkTime = false;
-        currentTime = breakDuration;
-        document.getElementById('timerStatus').textContent = 'DESCANSO';
-        alert('¡Tiempo de trabajo completado! Es hora de descansar.');
-    } else {
-        isWorkTime = true;
-        currentTime = workDuration;
-        sessionCount++;
-        document.getElementById('timerStatus').textContent = 'TRABAJO';
-        document.getElementById('sessionCount').textContent = sessionCount;
-        alert('¡Descanso completado! Volvamos al trabajo.');
-    }
-    
-    updateDisplay();
-    startTimer();
-}
-
-function updateDisplay() {
-    const minutes = Math.floor(currentTime / 60);
-    const seconds = currentTime % 60;
-    
-    const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    document.getElementById('timerTime').textContent = timeString;
-    
-    const totalTime = isWorkTime ? workDuration : breakDuration;
-    const progress = ((totalTime - currentTime) / totalTime) * 360;
-    document.getElementById('timerProgress').style.background = 
-        `conic-gradient(white ${progress}deg, transparent ${progress}deg)`;
-    
-    document.getElementById('timerStatus').textContent = isWorkTime ? 'TRABAJO' : 'DESCANSO';
-}
-
-// =================================================================================
-// INICIALIZACIÓN
-// =================================================================================
-
-document.addEventListener('DOMContentLoaded', function() {
-    currentScreen = 'welcome';
-});
