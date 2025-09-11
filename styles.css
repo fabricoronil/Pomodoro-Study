@@ -11,6 +11,7 @@ body {
     overflow-x: hidden;
     min-height: 100vh;
     padding: 20px;
+    overscroll-behavior-y: none;
 }
 
 .screen {
