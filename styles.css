@@ -109,8 +109,8 @@ body {
 
 .selection-title {
     font-size: 2.5rem;
-    margin-top: 0;
-    margin-bottom: 20px;
+    margin-top: 150px;
+    
     animation: slideInDown 0.8s ease-out, glow 2s ease-in-out infinite alternate;
     color: white;
     position: relative;
