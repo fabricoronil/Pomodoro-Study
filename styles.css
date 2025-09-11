@@ -647,7 +647,12 @@ body {
         flex-direction: column;
         align-items: center;
     }
-    
+    .vista-selector {
+        flex-wrap: wrap; /* Added to allow elements to wrap */
+    }
+    .fecha-selector {
+        flex-wrap: wrap; /* Added to allow elements to wrap */
+    }
     
 }
 
