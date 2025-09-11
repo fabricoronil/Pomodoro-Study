@@ -80,6 +80,25 @@ body {
     box-shadow: 0 10px 20px rgba(255, 255, 255, 0.2);
 }
 
+.history-btn {
+    background: linear-gradient(45deg, #555, #777);
+    color: white;
+    border: 2px solid white;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.history-btn:hover {
+    background: white;
+    color: black;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(255, 255, 255, 0.2);
+}
+
 /* Selection Screen */
 .selection-container {
     text-align: center;
@@ -331,11 +350,12 @@ body {
     background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
     border: 2px solid #444;
     border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    font-size: 1.5rem;
+    width: 75px;
+    height: 75px;
+    font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.3s ease;
+    color: white;
 }
 
 .control-btn:hover {
@@ -450,6 +470,76 @@ body {
     justify-content: space-between;
 }
 
+/* History Screen Styles */
+.history-container, .summary-container {
+    text-align: center;
+    width: 100%;
+    max-width: 800px;
+    padding: 2rem;
+}
+
+.history-title, .summary-title {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: white;
+}
+
+.history-list {
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    border: 2px solid #444;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.history-item {
+    background: #333;
+    border: 1px solid #555;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.history-item:last-child {
+    margin-bottom: 0;
+}
+
+.history-item p {
+    margin: 0.5rem 0;
+    color: #ccc;
+}
+
+.history-item strong {
+    color: white;
+}
+
+.no-history-message {
+    color: #ccc;
+    font-style: italic;
+}
+
+/* Summary Screen Styles */
+.summary-details, .overall-summary {
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    border: 2px solid #444;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.summary-details p, .overall-summary p {
+    margin: 0.5rem 0;
+    color: #ccc;
+}
+
+.summary-details strong, .overall-summary strong {
+    color: white;
+}
+
 /* Animations */
 @keyframes fadeInUp {
     from {
@@ -554,3 +644,4 @@ body {
     
     
 }
+

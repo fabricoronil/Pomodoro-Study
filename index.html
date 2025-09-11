@@ -23,6 +23,7 @@
             <p class="welcome-subtitle">Es hora de trabajar!</p>
             <!-- Este botón llama a la función showSelection() de JavaScript cuando se le hace clic. -->
             <button class="continue-btn" onclick="showSelection()">Continuar</button>
+            <button class="continue-btn" onclick="showHistory()">Ver Historial</button>
         </div>
     </div>
 
@@ -47,6 +48,7 @@
                     <p>Desarrollador Web Full Stack</p>
                 </div>
             </div>
+            <button class="back-btn" onclick="goBackToWelcome()">Volver</button>
         </div>
     </div>
 
@@ -130,8 +132,9 @@
                 
                 <!-- Botones de control del temporizador (play/pausa y reset). -->
                 <div class="timer-controls">
-                    <button class="control-btn" id="playPauseBtn" onclick="toggleTimer()">⏸️</button>
-                    <button class="control-btn" onclick="resetTimer()">🔄</button>
+                    <button class="control-btn" id="pauseBtn" onclick="pauseTimer()">Pausar</button>
+                    <button class="control-btn" id="resetBtn" onclick="resetTimer()">Restablecer</button>
+                    <button class="control-btn" id="finishBtn" onclick="finishTimer()">Terminar</button>
                 </div>
 
                 <!-- Muestra el número de sesiones completadas. -->
@@ -150,6 +153,42 @@
 
             <!-- Botón de volver movido al final del contenedor -->
             <button class="back-btn" onclick="goBack()">Volver</button>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- PANTALLA DE HISTORIAL (#historyScreen)                            -->
+    <!-- =================================================================== -->
+    <div id="historyScreen" class="screen">
+        <div class="history-container">
+            <h2 class="history-title">Historial de Pomodoros</h2>
+            <div class="history-list" id="historyList">
+                <!-- Los elementos del historial se cargarán aquí dinámicamente -->
+                <p class="no-history-message">Aún no hay pomodoros completados.</p>
+            </div>
+            <button class="back-btn" onclick="goBackToWelcome()">Volver al Inicio</button>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- PANTALLA DE RESUMEN DEL POMODORO (#summaryScreen)                 -->
+    <!-- =================================================================== -->
+    <div id="summaryScreen" class="screen">
+        <div class="summary-container">
+            <h2 class="summary-title">Pomodoro Completado</h2>
+            <div class="summary-details">
+                <p><strong>Actividad:</strong> <span id="summaryActivity"></span></p>
+                <p><strong>Duración de Trabajo:</strong> <span id="summaryWorkTime"></span></p>
+                <p><strong>Duración de Descanso:</strong> <span id="summaryBreakTime"></span></p>
+                <p><strong>Fecha:</strong> <span id="summaryDate"></span></p>
+            </div>
+            <div class="overall-summary">
+                <h3>Resumen General</h3>
+                <p><strong>Pomodoros Completados:</strong> <span id="totalPomodoros">0</span></p>
+                <p><strong>Tiempo Total de Trabajo:</strong> <span id="totalStudyTime">0h 0m</span></p>
+                <p><strong>Tiempo Total de Descanso:</strong> <span id="totalBreakTime">0h 0m</span></p>
+            </div>
+            <button class="back-btn" onclick="goBackToPomodoro()">Empezar Otro Pomodoro</button>
         </div>
     </div>
 

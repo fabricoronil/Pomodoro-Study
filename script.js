@@ -13,6 +13,12 @@ let breakDuration = 5 * 60;
 let currentTime = workDuration;
 let sessionCount = 1;
 
+let pomodoroHistory = [];
+let totalPomodorosCompleted = 0;
+let totalStudyTime = 0; // in seconds
+let totalBreakTime = 0; // in seconds
+let lastPomodoro = null; // Stores details of the last completed pomodoro for summary
+
 // =================================================================================
 // DATOS DE HORARIOS
 // =================================================================================
@@ -90,6 +96,23 @@ function showSelection() {
     showScreen('selectionScreen');
 }
 
+function showHistory() {
+    showScreen('historyScreen');
+    renderHistory();
+}
+
+function showSummary(pomodoro) {
+    showScreen('summaryScreen');
+    document.getElementById('summaryActivity').textContent = pomodoro.activity;
+    document.getElementById('summaryWorkTime').textContent = formatTime(pomodoro.workDuration);
+    document.getElementById('summaryBreakTime').textContent = formatTime(pomodoro.breakDuration);
+    document.getElementById('summaryDate').textContent = new Date(pomodoro.timestamp).toLocaleString();
+
+    document.getElementById('totalPomodoros').textContent = totalPomodorosCompleted;
+    document.getElementById('totalStudyTime').textContent = formatTime(totalStudyTime);
+    document.getElementById('totalBreakTime').textContent = formatTime(totalBreakTime);
+}
+
 function selectStudy(study) {
     currentStudy = study;
 
@@ -154,6 +177,20 @@ function goBack() {
         timer = null;
         isRunning = false;
     }
+}
+
+function goBackToWelcome() {
+    showScreen('welcomeScreen');
+    if (timer) {
+        clearInterval(timer);
+        timer = null;
+        isRunning = false;
+    }
+}
+
+function goBackToPomodoro() {
+    showScreen('pomodoroScreen');
+    resetTimerSetup();
 }
 
 // =================================================================================
@@ -227,7 +264,6 @@ function startTimer() {
     if (isRunning) return;
     
     isRunning = true;
-    document.getElementById('playPauseBtn').textContent = '⏸️';
     
     timer = setInterval(() => {
         currentTime--;
@@ -238,6 +274,177 @@ function startTimer() {
         }
     }, 1000);
 }
+
+function pauseTimer() {
+    if (!isRunning) return;
+    
+    isRunning = false;
+    clearInterval(timer);
+    timer = null;
+}
+
+function resetTimer() {
+    pauseTimer();
+    
+    if (isWorkTime) {
+        currentTime = workDuration;
+    } else {
+        currentTime = breakDuration;
+    }
+    
+    updateDisplay();
+}
+
+function finishTimer() {
+    pauseTimer();
+    recordPomodoro(true); // true indicates finished by user
+    showSummary(lastPomodoro);
+}
+
+function completeSession() {
+    pauseTimer();
+    recordPomodoro(false); // false indicates completed naturally
+    
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (e) {
+        console.log('Audio no disponible');
+    }
+    
+    if (isWorkTime) {
+        isWorkTime = false;
+        currentTime = breakDuration;
+        document.getElementById('timerStatus').textContent = 'DESCANSO';
+        alert('¡Tiempo de trabajo completado! Es hora de descansar.');
+    } else {
+        isWorkTime = true;
+        currentTime = workDuration;
+        sessionCount++;
+        document.getElementById('timerStatus').textContent = 'TRABAJO';
+        document.getElementById('sessionCount').textContent = sessionCount;
+        alert('¡Descanso completado! Volvamos al trabajo.');
+    }
+    
+    updateDisplay();
+    startTimer();
+}
+
+function recordPomodoro(finishedByUser) {
+    const pomodoro = {
+        activity: currentSubject,
+        workDuration: workDuration - currentTime, // Actual work time spent
+        breakDuration: isWorkTime ? 0 : (breakDuration - currentTime), // Actual break time spent
+        timestamp: new Date().toISOString(),
+        type: isWorkTime ? 'Trabajo' : 'Descanso',
+        completed: finishedByUser ? 'Terminado por usuario' : 'Completado naturalmente'
+    };
+
+    pomodoroHistory.push(pomodoro);
+    totalPomodorosCompleted++;
+    totalStudyTime += (isWorkTime ? (workDuration - currentTime) : 0);
+    totalBreakTime += (isWorkTime ? 0 : (breakDuration - currentTime));
+    lastPomodoro = pomodoro;
+
+    // Optionally save to localStorage
+    saveHistory();
+}
+
+function renderHistory() {
+    const historyList = document.getElementById('historyList');
+    historyList.innerHTML = ''; // Clear previous entries
+
+    if (pomodoroHistory.length === 0) {
+        historyList.innerHTML = '<p class="no-history-message">Aún no hay pomodoros completados.</p>';
+        return;
+    }
+
+    pomodoroHistory.forEach((pomodoro, index) => {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.innerHTML = `
+            <p><strong>${index + 1}. Actividad:</strong> ${pomodoro.activity}</p>
+            <p><strong>Tipo:</strong> ${pomodoro.type}</p>
+            <p><strong>Duración:</strong> ${formatTime(pomodoro.type === 'Trabajo' ? pomodoro.workDuration : pomodoro.breakDuration)}</p>
+            <p><strong>Estado:</strong> ${pomodoro.completed}</p>
+            <p><strong>Fecha:</strong> ${new Date(pomodoro.timestamp).toLocaleString()}</p>
+        `;
+        historyList.appendChild(item);
+    });
+}
+
+function formatTime(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    
+    let result = '';
+    if (h > 0) result += `${h}h `;
+    if (m > 0) result += `${m}m `;
+    result += `${s}s`;
+    return result.trim();
+}
+
+function saveHistory() {
+    localStorage.setItem('pomodoroHistory', JSON.stringify(pomodoroHistory));
+    localStorage.setItem('totalPomodorosCompleted', totalPomodorosCompleted);
+    localStorage.setItem('totalStudyTime', totalStudyTime);
+    localStorage.setItem('totalBreakTime', totalBreakTime);
+}
+
+function loadHistory() {
+    const savedHistory = localStorage.getItem('pomodoroHistory');
+    const savedTotalPomodoros = localStorage.getItem('totalPomodorosCompleted');
+    const savedTotalStudyTime = localStorage.getItem('totalStudyTime');
+    const savedTotalBreakTime = localStorage.getItem('totalBreakTime');
+
+    if (savedHistory) {
+        pomodoroHistory = JSON.parse(savedHistory);
+    }
+    if (savedTotalPomodoros) {
+        totalPomodorosCompleted = parseInt(savedTotalPomodoros);
+    }
+    if (savedTotalStudyTime) {
+        totalStudyTime = parseInt(savedTotalStudyTime);
+    }
+    if (savedTotalBreakTime) {
+        totalBreakTime = parseInt(savedTotalBreakTime);
+    }
+}
+
+function updateDisplay() {
+    const minutes = Math.floor(currentTime / 60);
+    const seconds = currentTime % 60;
+    
+    const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    document.getElementById('timerTime').textContent = timeString;
+    
+    const totalTime = isWorkTime ? workDuration : breakDuration;
+    const progress = ((totalTime - currentTime) / totalTime) * 360;
+    document.getElementById('timerProgress').style.background = 
+        `conic-gradient(white ${progress}deg, transparent ${progress}deg)`;
+    
+    document.getElementById('timerStatus').textContent = isWorkTime ? 'TRABAJO' : 'DESCANSO';
+}
+
+// =================================================================================
+// INICIALIZACIÓN
+// =================================================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadHistory();
+    currentScreen = 'welcome';
+});
 
 function pauseTimer() {
     if (!isRunning) return;
