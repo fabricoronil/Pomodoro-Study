@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<!-- El atributo lang="es" le dice al navegador que el idioma principal de la página es español. -->
+<html lang="es">
+<head>
+    <!-- Configuración de caracteres para que se muestren bien las tildes y eñes. -->
+    <meta charset="UTF-8">
+    <!-- Asegura que la página se vea bien en todos los dispositivos (diseño responsivo). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- El título que aparece en la pestaña del navegador. -->
+    <title>Pomodoro App - Fabri Coronil</title>
+    <!-- Enlace a la hoja de estilos CSS que da diseño a la página. -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- =================================================================== -->
+    <!-- PANTALLA DE BIENVENIDA (#welcomeScreen)                           -->
+    <!-- =================================================================== -->
+    <!-- Es la primera pantalla que ve el usuario. La clase "active" la hace visible por defecto. -->
+    <div id="welcomeScreen" class="screen active">
+        <div class="welcome-container">
+            <h1 class="welcome-title">¡Bienvenido Fabri Coronil!</h1>
+            <p class="welcome-subtitle">Es hora de trabajar!</p>
+            <!-- Este botón llama a la función showSelection() de JavaScript cuando se le hace clic. -->
+            <button class="continue-btn" onclick="showSelection()">Continuar</button>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- PANTALLA DE SELECCIÓN DE ESTUDIO (#selectionScreen)             -->
+    <!-- =================================================================== -->
+    <!-- En esta pantalla, el usuario elige entre Universidad y UTN. -->
+    <div id="selectionScreen" class="screen">
+        <div class="selection-container">
+            <h2 class="selection-title">Elige tu área de estudio</h2>
+            <div class="cards-container">
+                <!-- Tarjeta para Universidad: llama a selectStudy('universidad') -->
+                <div class="study-card" onclick="selectStudy('universidad')">
+                    <div class="card-icon">🎓</div>
+                    <h3>Universidad Cuenca de la Plata</h3>
+                    <p>Ingeniería en Sistemas</p>
+                </div>
+                <!-- Tarjeta para UTN: llama a selectStudy('utn') -->
+                <div class="study-card" onclick="selectStudy('utn')">
+                    <div class="card-icon">💻</div>
+                    <h3>UTN</h3>
+                    <p>Desarrollador Web Full Stack</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- PANTALLA DE SELECCIÓN DE MATERIAS (#subjectsScreen)              -->
+    <!-- =================================================================== -->
+    <!-- Esta pantalla solo se muestra si el usuario elige "Universidad". -->
+    <div id="subjectsScreen" class="screen">
+        <div class="subjects-container">
+            <h2 class="subjects-title">¡Selecciona una materia!</h2>
+            <!-- Una grilla que contiene las tarjetas de cada materia. -->
+            <div class="subjects-grid">
+                <!-- Cada tarjeta llama a startPomodoro() con el nombre de la materia. -->
+                <div class="subject-card" onclick="startPomodoro('Programación Estructurada')">
+                    <div class="subject-icon">📝</div>
+                    <h3>Programación Estructurada</h3>
+                </div>
+                <div class="subject-card" onclick="startPomodoro('Matemática Discreta')">
+                    <div class="subject-icon">🔢</div>
+                    <h3>Matemática Discreta</h3>
+                </div>
+                <div class="subject-card" onclick="startPomodoro('Análisis Matemático')">
+                    <div class="subject-icon">📊</div>
+                    <h3>Análisis Matemático</h3>
+                </div>
+                <div class="subject-card" onclick="startPomodoro('Arquitectura de Computadoras')">
+                    <div class="subject-icon">📐</div>
+                    <h3>Arquitectura de Computadoras</h3>
+                </div>
+            </div>
+
+            <!-- NUEVO: Contenedor para el horario semanal completo. -->
+            <div class="weekly-schedule" id="weeklySchedule">
+                <h2>Horario Semanal</h2>
+                <div id="weeklyScheduleContent"></div>
+            </div>
+
+            <!-- Botón para regresar a la pantalla anterior. -->
+            <button class="back-btn" onclick="goBack()">Volver</button>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- PANTALLA DEL POMODORO (#pomodoroScreen)                          -->
+    <!-- =================================================================== -->
+    <!-- La pantalla principal del temporizador. -->
+    <div id="pomodoroScreen" class="screen">
+        <div class="pomodoro-container">
+            <!-- Título de la actividad (nombre de la materia) -->
+            <h2 id="currentActivity">Sesión de Estudio</h2>
+            
+            <!-- Sección para configurar los tiempos del Pomodoro. -->
+            <div class="timer-setup" id="timerSetup">
+                <h3>Configurar Pomodoro</h3>
+                <div class="time-inputs">
+                    <div class="input-group">
+                        <label>Tiempo de trabajo (min):</label>
+                        <input type="number" id="workTime" value="25" min="1" max="120">
+                    </div>
+                    <div class="input-group">
+                        <label>Tiempo de descanso (min):</label>
+                        <input type="number" id="breakTime" value="5" min="1" max="30">
+                    </div>
+                </div>
+                <button class="start-btn" onclick="initializeTimer()">Comenzar</button>
+            </div>
+
+            <!-- Sección que muestra el temporizador en funcionamiento (círculo, tiempo, etc.). -->
+            <!-- Está oculta por defecto con style="display: none;". -->
+            <div class="timer-display" id="timerDisplay" style="display: none;">
+                <div class="timer-circle">
+                    <!-- La barra de progreso que se va llenando. -->
+                    <div class="timer-progress" id="timerProgress"></div>
+                    <div class="timer-content">
+                        <!-- El tiempo restante. -->
+                        <div class="timer-time" id="timerTime">25:00</div>
+                        <!-- El estado actual (TRABAJO o DESCANSO). -->
+                        <div class="timer-status" id="timerStatus">TRABAJO</div>
+                    </div>
+                </div>
+                
+                <!-- Botones de control del temporizador (play/pausa y reset). -->
+                <div class="timer-controls">
+                    <button class="control-btn" id="playPauseBtn" onclick="toggleTimer()">⏸️</button>
+                    <button class="control-btn" onclick="resetTimer()">🔄</button>
+                </div>
+
+                <!-- Muestra el número de sesiones completadas. -->
+                <div class="session-info">
+                    <div class="session-counter">
+                        <span>Sesión: <span id="sessionCount">1</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NUEVO: Contenedor para el horario de la materia seleccionada. -->
+            <div class="subject-schedule" id="subjectSchedule" style="display: none;">
+                <h3>Horario de Cursado</h3>
+                <ul id="scheduleList"></ul>
+            </div>
+
+            <!-- Botón de volver movido al final del contenedor -->
+            <button class="back-btn" onclick="goBack()">Volver</button>
+        </div>
+    </div>
+
+    <!-- Enlace al archivo JavaScript que controla toda la lógica de la aplicación. -->
+    <script src="script.js"></script>
+</body>
+</html>

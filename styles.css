@@ -1,0 +1,556 @@
+* {
+
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    color: white;
+    overflow-x: hidden;
+    height: 100vh;
+}
+
+.screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+     overflow-y: auto;
+}
+
+.screen.active {
+    opacity: 1;
+    transform: translateX(0);
+    z-index: 10;
+}
+
+.screen.slide-out {
+    transform: translateX(-100%);
+}
+
+/* Welcome Screen */
+.welcome-container {
+    text-align: center;
+    animation: fadeInUp 1s ease-out;
+}
+
+.welcome-title {
+    font-size: 3.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    background: linear-gradient(45deg, #000000, #010101);
+     background-clip: text;
+    -webkit-background-clip: text; 
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+.welcome-subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+    animation: fadeIn 2s ease-out 0.5s both;
+}
+
+.continue-btn {
+    background: linear-gradient(45deg, #333, #555);
+    color: white;
+    border: 2px solid white;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: bounceIn 1s ease-out 1s both;
+}
+
+.continue-btn:hover {
+    background: white;
+    color: black;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(255, 255, 255, 0.2);
+}
+
+/* Selection Screen */
+.selection-container {
+    text-align: center;
+    width: 100%;
+    max-width: 1000px;
+    padding: 2rem;
+}
+
+.selection-title {
+    font-size: 2.5rem;
+    margin-top: 0;
+    margin-bottom: 20px;
+    animation: slideInDown 0.8s ease-out, glow 2s ease-in-out infinite alternate;
+    color: white;
+    position: relative;
+}
+
+.cards-container {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    
+}
+
+.study-card {
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    border: 2px solid #444;
+    border-radius: 20px;
+    padding: 2rem;
+    width: 300px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.study-card:hover {
+    transform: translateY(-10px) scale(1.05);
+    border-color: white;
+    box-shadow: 0 20px 40px rgba(255, 255, 255, 0.1);
+}
+
+.card-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    animation: bounce 2s infinite;
+}
+
+.study-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.study-card p {
+    color: #ccc;
+    font-size: 1.1rem;
+}
+
+/* Subjects Screen */
+.subjects-container {
+    text-align: center;
+    width: 100%;
+    max-width: 1200px;
+    padding: 1rem;
+    height: 100%;
+}
+
+.subjects-title {
+    font-size: 2.5rem;
+    animation: slideInDown 0.8s ease-out, glow 2s ease-in-out infinite alternate;
+    color: white;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.subjects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.3rem;
+    
+    
+}
+
+.subject-card {
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    border: 2px solid #444;
+    border-radius: 15px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.subject-card:hover {
+    transform: translateY(-5px);
+    border-color: white;
+    box-shadow: 0 15px 30px rgba(255, 255, 255, 0.1);
+}
+
+.subject-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.subject-card h3 {
+    font-size: 1.2rem;
+    color: white;
+}
+
+/* Pomodoro Screen */
+.pomodoro-container {
+    width: 100%;
+    max-width: 600px;
+    padding: 2rem;
+    padding-top: 5rem;
+    text-align: center;
+    min-height: 100vh; /* Ensure it takes full viewport height */
+}
+
+/* Estilo para el título de la materia movido */
+.pomodoro-container > h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    margin-top: 220px; /* Added a significant margin-top */
+}
+
+
+
+.timer-setup {
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 2px solid #444;
+}
+
+.timer-setup h3 {
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+}
+
+.time-inputs {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.input-group label {
+    font-size: 1rem;
+    color: #ccc;
+}
+
+.input-group input {
+    background: #333;
+    border: 2px solid #555;
+    border-radius: 10px;
+    padding: 10px;
+    color: white;
+    font-size: 1.2rem;
+    text-align: center;
+    width: 100px;
+    transition: border-color 0.3s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: white;
+}
+
+.start-btn {
+    background: linear-gradient(45deg, #333, #555);
+    color: white;
+    border: 2px solid white;
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.start-btn:hover {
+    background: white;
+    color: black;
+    transform: translateY(-2px);
+}
+
+.timer-display {
+    text-align: center;
+}
+
+.timer-circle {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto 2rem;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    border: 4px solid #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.timer-progress {
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: conic-gradient(white 0deg, transparent 0deg);
+    transition: background 0.5s ease;
+}
+
+.timer-content {
+    z-index: 10;
+}
+
+.timer-time {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.timer-status {
+    font-size: 1.2rem;
+    color: #ccc;
+    letter-spacing: 2px;
+}
+
+.timer-controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.control-btn {
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    border: 2px solid #444;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.control-btn:hover {
+    border-color: white;
+    transform: scale(1.1);
+}
+
+.session-info {
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    border: 2px solid #444;
+    border-radius: 15px;
+    padding: 1rem;
+}
+
+.session-counter {
+    font-size: 1.2rem;
+    color: #ccc;
+}
+
+.back-btn {
+    background: transparent;
+    color: #ccc;
+    border: 2px solid #444;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    margin-top: 2rem; /* Margen ajustado */
+}
+
+.back-btn:hover {
+    color: white;
+    border-color: white;
+    transform: translateY(-2px);
+}
+
+/* Styles for Individual Subject Schedule on Pomodoro Screen */
+.subject-schedule {
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    border: 2px solid #444;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    text-align: left;
+}
+
+.subject-schedule h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.subject-schedule ul {
+    list-style: none;
+    padding: 0;
+}
+
+.subject-schedule li {
+    color: #ccc;
+    font-size: 1.1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #444;
+}
+
+.subject-schedule li:last-child {
+    border-bottom: none;
+}
+
+/* Styles for Full Weekly Schedule on Subjects Screen */
+.weekly-schedule {
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    border: 2px solid #444;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-top: 3rem;
+    text-align: left;
+}
+
+.weekly-schedule h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.schedule-day {
+    margin-bottom: 1.5rem;
+}
+
+.schedule-day:last-child {
+    margin-bottom: 0;
+}
+
+.schedule-day h3 {
+    font-size: 1.2rem;
+    color: white;
+    border-bottom: 2px solid #555;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.schedule-day ul {
+    list-style: none;
+    padding: 0;
+}
+
+.schedule-day li {
+    color: #ccc;
+    font-size: 1.1rem;
+    padding: 0.5rem 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes glow {
+    from {
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+    to {
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .welcome-title {
+        font-size: 2.5rem;
+    }
+    
+    .cards-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .study-card {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .subjects-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    
+    .timer-circle {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .timer-progress {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .timer-time {
+        font-size: 2.5rem;
+    }
+    
+    .time-inputs {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    
+}
