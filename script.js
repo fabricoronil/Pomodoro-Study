@@ -361,6 +361,14 @@ function recordPomodoro(finishedByUser) {
     renderNewHistory(); // Add this call to update history view
 }
 
+function getWeekNumber(d) {
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+    return [d.getUTCFullYear(), weekNo];
+}
+
 function formatHistoryTime(totalSeconds) {
     if (isNaN(totalSeconds) || totalSeconds < 0) {
         return '0s';
@@ -379,19 +387,56 @@ function formatHistoryTime(totalSeconds) {
     }
 }
 
+function formatTotalTime(totalSeconds) {
+    if (isNaN(totalSeconds) || totalSeconds < 0) {
+        return '0s';
+    }
+
+    const hours = totalSeconds / 3600;
+    const minutes = totalSeconds / 60;
+    const seconds = totalSeconds;
+
+    if (hours >= 1) {
+        return `${hours.toFixed(1)}h`;
+    } else if (minutes >= 1) {
+        return `${Math.floor(minutes)}min`;
+    } else {
+        return `${Math.round(seconds)}s`;
+    }
+}
+
 function renderNewHistory() {
-    const history = pomodoroHistory || []; // Ensure history is an array
+    const history = pomodoroHistory || [];
+
+    const vista = document.querySelector('.vista-btn.active').dataset.vista;
+    const dateValue = document.getElementById('date-input').value;
+
+    const filteredHistory = history.filter(p => {
+        const pomodoroDate = new Date(p.timestamp);
+        if (vista === 'dia') {
+            const selectedDate = new Date(dateValue);
+            const adjustedSelectedDate = new Date(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate());
+            return pomodoroDate.toDateString() === adjustedSelectedDate.toDateString();
+        } else if (vista === 'semana') {
+            const [year, week] = dateValue.split('-W');
+            const [pomodoroYear, pomodoroWeek] = getWeekNumber(pomodoroDate);
+            return pomodoroYear == year && pomodoroWeek == week;
+        } else if (vista === 'mes') {
+            const [year, month] = dateValue.split('-');
+            return pomodoroDate.getFullYear() == year && (pomodoroDate.getMonth() + 1) == month;
+        }
+        return false;
+    });
 
     // Calculate summary stats
-    const totalSeconds = history.reduce((acc, curr) => acc + (Number(curr.workDuration) || 0), 0);
-    const totalHours = (totalSeconds / 3600).toFixed(1);
-    const totalSessions = history.length;
-    const subjects = [...new Set(history.map(item => item.activity).filter(Boolean))]; // Filter out undefined/null subjects
+    const totalSeconds = filteredHistory.reduce((acc, curr) => acc + (Number(curr.workDuration) || 0), 0);
+    const totalSessions = filteredHistory.length;
+    const subjects = [...new Set(filteredHistory.map(item => item.activity).filter(Boolean))]; // Filter out undefined/null subjects
     const totalSubjects = subjects.length;
     const avgSessionSeconds = totalSessions > 0 ? totalSeconds / totalSessions : 0;
 
     // Update summary cards
-    document.getElementById('history-total-hours').textContent = isNaN(totalHours) ? '0h' : `${totalHours}h`;
+    document.getElementById('history-total-hours').textContent = formatTotalTime(totalSeconds);
     document.getElementById('history-total-sessions').textContent = totalSessions;
     document.getElementById('history-total-subjects').textContent = totalSubjects;
     document.getElementById('history-avg-session').textContent = formatHistoryTime(avgSessionSeconds);
@@ -404,8 +449,8 @@ function renderNewHistory() {
         'Arquitectura de Computadoras'
     ];
 
-    const universityHistory = history.filter(item => item.activity && universitySubjects.includes(item.activity));
-    const utnHistory = history.filter(item => item.activity && !universitySubjects.includes(item.activity));
+    const universityHistory = filteredHistory.filter(item => item.activity && universitySubjects.includes(item.activity));
+    const utnHistory = filteredHistory.filter(item => item.activity && !universitySubjects.includes(item.activity));
 
     const distributionContainer = document.getElementById('history-distribution-container');
     distributionContainer.innerHTML = ''; // Clear previous content
@@ -561,15 +606,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     break;
             }
             
-            // Aquí iría la lógica para cargar los datos de la fecha seleccionada
-            console.log(`Vista cambiada a: ${vistaSeleccionada}`);
-            // Ejemplo: fetchHistoryData(vistaSeleccionada, fechaInput.value);
+            renderNewHistory();
         });
     });
 
     // Evento para cuando cambia la fecha
     fechaInput.addEventListener('change', () => {
-        console.log(`Fecha seleccionada: ${fechaInput.value}`);
-        // Aquí también iría la lógica para recargar los datos
+        renderNewHistory();
     });
 });
