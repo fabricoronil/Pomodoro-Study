@@ -217,7 +217,7 @@ body {
     width: 100%;
     max-width: 600px;
     padding: 0rem;
-    padding-top: 5rem;
+    padding-top: 1rem;
     text-align: center;
     min-height: 100vh; /* Ensure it takes full viewport height */
 }
