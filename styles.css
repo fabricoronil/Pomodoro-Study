@@ -111,7 +111,7 @@ body {
 
 .selection-title {
     font-size: 2.5rem;
-    margin-top: 150px;
+    margin-top: 0px;
     
     animation: slideInDown 0.8s ease-out, glow 2s ease-in-out infinite alternate;
     color: white;
@@ -216,7 +216,7 @@ body {
 .pomodoro-container {
     width: 100%;
     max-width: 600px;
-    padding: 2rem;
+    padding: 0rem;
     padding-top: 5rem;
     text-align: center;
     min-height: 100vh; /* Ensure it takes full viewport height */
@@ -226,7 +226,7 @@ body {
 .pomodoro-container > h2 {
     font-size: 2rem;
     margin-bottom: 2rem;
-    margin-top: 220px; /* Added a significant margin-top */
+    margin-top: 0px; /* Added a significant margin-top */
 }
 
 
@@ -288,6 +288,7 @@ body {
     border-radius: 25px;
     cursor: pointer;
     transition: all 0.3s ease;
+    margin-top: 40px;
 }
 
 .start-btn:hover {
