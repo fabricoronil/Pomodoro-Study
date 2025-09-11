@@ -361,6 +361,24 @@ function recordPomodoro(finishedByUser) {
     renderNewHistory(); // Add this call to update history view
 }
 
+function formatHistoryTime(totalSeconds) {
+    if (isNaN(totalSeconds) || totalSeconds < 0) {
+        return '0s';
+    }
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.round(totalSeconds % 60);
+
+    if (hours > 0) {
+        return `${hours}h ${minutes}min`;
+    } else if (minutes > 0) {
+        return `${minutes}min`;
+    } else {
+        return `${seconds}s`;
+    }
+}
+
 function renderNewHistory() {
     const history = pomodoroHistory || []; // Ensure history is an array
 
@@ -370,13 +388,13 @@ function renderNewHistory() {
     const totalSessions = history.length;
     const subjects = [...new Set(history.map(item => item.activity).filter(Boolean))]; // Filter out undefined/null subjects
     const totalSubjects = subjects.length;
-    const avgSessionMinutes = totalSessions > 0 ? Math.round((totalSeconds / totalSessions) / 60) : 0;
+    const avgSessionSeconds = totalSessions > 0 ? totalSeconds / totalSessions : 0;
 
     // Update summary cards
     document.getElementById('history-total-hours').textContent = isNaN(totalHours) ? '0h' : `${totalHours}h`;
     document.getElementById('history-total-sessions').textContent = totalSessions;
     document.getElementById('history-total-subjects').textContent = totalSubjects;
-    document.getElementById('history-avg-session').textContent = isNaN(avgSessionMinutes) ? '0min' : `${avgSessionMinutes}min`;
+    document.getElementById('history-avg-session').textContent = formatHistoryTime(avgSessionSeconds);
 
     // Group by study type (Universidad vs UTN)
     const universitySubjects = [
@@ -429,12 +447,7 @@ function renderNewHistory() {
             const time = document.createElement('span');
             time.className = 'tiempo';
             const subjectSeconds = subjectStats[subject];
-            const hours = Math.floor(subjectSeconds / 3600);
-            const minutes = Math.round((subjectSeconds % 3600) / 60);
-            time.textContent = hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
-            if (isNaN(hours) || isNaN(minutes)) {
-                time.textContent = '0min';
-            }
+            time.textContent = formatHistoryTime(subjectSeconds);
 
 
             const percentage = document.createElement('span');
