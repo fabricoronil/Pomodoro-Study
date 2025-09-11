@@ -98,7 +98,7 @@ function showSelection() {
 
 function showHistory() {
     showScreen('historyScreen');
-    renderHistory();
+    renderNewHistory();
 }
 
 function showSummary(pomodoro) {
@@ -358,29 +358,102 @@ function recordPomodoro(finishedByUser) {
 
     // Optionally save to localStorage
     saveHistory();
+    renderNewHistory(); // Add this call to update history view
 }
 
-function renderHistory() {
-    const historyList = document.getElementById('historyList');
-    historyList.innerHTML = ''; // Clear previous entries
+function renderNewHistory() {
+    const history = pomodoroHistory || []; // Ensure history is an array
 
-    if (pomodoroHistory.length === 0) {
-        historyList.innerHTML = '<p class="no-history-message">Aún no hay pomodoros completados.</p>';
-        return;
-    }
+    // Calculate summary stats
+    const totalSeconds = history.reduce((acc, curr) => acc + (Number(curr.workDuration) || 0), 0);
+    const totalHours = (totalSeconds / 3600).toFixed(1);
+    const totalSessions = history.length;
+    const subjects = [...new Set(history.map(item => item.activity).filter(Boolean))]; // Filter out undefined/null subjects
+    const totalSubjects = subjects.length;
+    const avgSessionMinutes = totalSessions > 0 ? Math.round((totalSeconds / totalSessions) / 60) : 0;
 
-    pomodoroHistory.forEach((pomodoro, index) => {
-        const item = document.createElement('div');
-        item.className = 'history-item';
-        item.innerHTML = `
-            <p><strong>${index + 1}. Actividad:</strong> ${pomodoro.activity}</p>
-            <p><strong>Tipo:</strong> ${pomodoro.type}</p>
-            <p><strong>Duración:</strong> ${formatTime(pomodoro.type === 'Trabajo' ? pomodoro.workDuration : pomodoro.breakDuration)}</p>
-            <p><strong>Estado:</strong> ${pomodoro.completed}</p>
-            <p><strong>Fecha:</strong> ${new Date(pomodoro.timestamp).toLocaleString()}</p>
-        `;
-        historyList.appendChild(item);
-    });
+    // Update summary cards
+    document.getElementById('history-total-hours').textContent = isNaN(totalHours) ? '0h' : `${totalHours}h`;
+    document.getElementById('history-total-sessions').textContent = totalSessions;
+    document.getElementById('history-total-subjects').textContent = totalSubjects;
+    document.getElementById('history-avg-session').textContent = isNaN(avgSessionMinutes) ? '0min' : `${avgSessionMinutes}min`;
+
+    // Group by study type (Universidad vs UTN)
+    const universitySubjects = [
+        'Programación Estructurada',
+        'Matemática Discreta',
+        'Análisis Matemático',
+        'Arquitectura de Computadoras'
+    ];
+
+    const universityHistory = history.filter(item => item.activity && universitySubjects.includes(item.activity));
+    const utnHistory = history.filter(item => item.activity && !universitySubjects.includes(item.activity));
+
+    const distributionContainer = document.getElementById('history-distribution-container');
+    distributionContainer.innerHTML = ''; // Clear previous content
+
+    // Function to create and append a distribution section
+    const createDistributionSection = (title, icon, historyData) => {
+        if (historyData.length === 0) return;
+
+        const container = document.createElement('div');
+        container.className = 'distribucion-container';
+
+        const header = document.createElement('h3');
+        header.className = 'distribucion-titulo';
+        header.innerHTML = `<span class="material-icons">${icon}</span> ${title}`;
+        container.appendChild(header);
+
+        const subjectStats = historyData.reduce((acc, curr) => {
+            if (curr.activity) {
+                if (!acc[curr.activity]) {
+                    acc[curr.activity] = 0;
+                }
+                acc[curr.activity] += (Number(curr.workDuration) || 0);
+            }
+            return acc;
+        }, {});
+
+        const totalSectionSeconds = Object.values(subjectStats).reduce((acc, curr) => acc + curr, 0);
+
+        for (const subject in subjectStats) {
+            const item = document.createElement('div');
+            item.className = 'materia-item';
+
+            const subjectName = document.createElement('span');
+            subjectName.textContent = subject;
+
+            const statsDiv = document.createElement('div');
+            statsDiv.className = 'materia-stats';
+
+            const time = document.createElement('span');
+            time.className = 'tiempo';
+            const subjectSeconds = subjectStats[subject];
+            const hours = Math.floor(subjectSeconds / 3600);
+            const minutes = Math.round((subjectSeconds % 3600) / 60);
+            time.textContent = hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
+            if (isNaN(hours) || isNaN(minutes)) {
+                time.textContent = '0min';
+            }
+
+
+            const percentage = document.createElement('span');
+            percentage.className = 'porcentaje';
+            const percentValue = totalSectionSeconds > 0 ? ((subjectSeconds / totalSectionSeconds) * 100).toFixed(1) : 0;
+            percentage.textContent = isNaN(percentValue) ? '0%' : `${percentValue}%`;
+
+            statsDiv.appendChild(time);
+            statsDiv.appendChild(percentage);
+            item.appendChild(subjectName);
+            item.appendChild(statsDiv);
+            container.appendChild(item);
+        }
+
+        distributionContainer.appendChild(container);
+    };
+
+    createDistributionSection('Distribución por Materia - Universidad de la Cuenca', 'school', universityHistory);
+    createDistributionSection('Distribución con la UTN', 'code', utnHistory);
 }
 
 function formatTime(seconds) {
@@ -487,5 +560,3 @@ document.addEventListener('DOMContentLoaded', function() {
         // Aquí también iría la lógica para recargar los datos
     });
 });
-
-

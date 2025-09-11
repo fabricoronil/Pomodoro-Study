@@ -178,70 +178,39 @@
                 <input type="date" id="date-input" value="2024-09-10">
             </div>
 
-            <div class="resumen-grid">
+            <div class="resumen-grid" id="history-summary-grid">
                 <div class="resumen-card">
                     <span class="material-icons icon">schedule</span>
                     <div class="card-content">
                         <span class="card-label">Total de Horas</span>
-                        <span class="card-value">3.8h</span>
+                        <span class="card-value" id="history-total-hours">0h</span>
                     </div>
                 </div>
                 <div class="resumen-card">
                     <span class="material-icons icon">bar_chart</span>
                     <div class="card-content">
                         <span class="card-label">Sesiones</span>
-                        <span class="card-value">3</span>
+                        <span class="card-value" id="history-total-sessions">0</span>
                     </div>
                 </div>
                 <div class="resumen-card">
                     <span class="material-icons icon">library_books</span>
                     <div class="card-content">
                         <span class="card-label">Materias</span>
-                        <span class="card-value">3</span>
+                        <span class="card-value" id="history-total-subjects">0</span>
                     </div>
                 </div>
                 <div class="resumen-card">
                     <span class="material-icons icon">today</span>
                     <div class="card-content">
                         <span class="card-label">Promedio/Sesión</span>
-                        <span class="card-value">77min</span>
+                        <span class="card-value" id="history-avg-session">0min</span>
                     </div>
                 </div>
             </div>
 
-            <div class="distribucion-container">
-                <h3 class="distribucion-titulo">
-                    <span class="material-icons">school</span>
-                    Distribución por Materia - Universidad de la Cuenca
-                </h3>
-                <div class="materia-item">
-                    <span>Programación Estructurada</span>
-                    <div class="materia-stats">
-                        <span class="tiempo">45min</span>
-                        <span class="porcentaje">19.6%</span>
-                    </div>
-                </div>
-                <div class="materia-item">
-                    <span>Análisis Matemático</span>
-                    <div class="materia-stats">
-                        <span class="tiempo">1h 30min</span>
-                        <span class="porcentaje">39.1%</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="distribucion-container">
-                <h3 class="distribucion-titulo">
-                     <span class="material-icons">code</span>
-                    Distribución con la UTN
-                </h3>
-                <div class="materia-item">
-                    <span>React y Node.js</span>
-                    <div class="materia-stats">
-                        <span class="tiempo">1h 35min</span>
-                        <span class="porcentaje">41.3%</span>
-                    </div>
-                </div>
+            <div id="history-distribution-container">
+                <!-- Los datos de distribución se insertarán aquí dinámicamente -->
             </div>
             <button class="back-btn" onclick="goBackToWelcome()">Volver al Inicio</button>
         </section>
