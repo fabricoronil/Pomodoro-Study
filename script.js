@@ -369,6 +369,18 @@ function getWeekNumber(d) {
     return [d.getUTCFullYear(), weekNo];
 }
 
+function getStartOfWeek(year, weekNumber) {
+    const jan1 = new Date(year, 0, 1);
+    const days = (weekNumber - 1) * 7;
+    const dayOfWeek = jan1.getDay(); // 0 for Sunday, 1 for Monday, etc.
+    let monday = new Date(jan1.getFullYear(), jan1.getMonth(), jan1.getDate() + days + (dayOfWeek <= 4 ? 1 - dayOfWeek : 8 - dayOfWeek));
+    // Adjust for the first week of the year if it starts in the previous year
+    if (monday.getDay() === 0) { // If it's Sunday, move to next Monday
+        monday.setDate(monday.getDate() + 1);
+    }
+    return monday;
+}
+
 function formatHistoryTime(totalSeconds) {
     if (isNaN(totalSeconds) || totalSeconds < 0) {
         return '0s';
@@ -441,7 +453,75 @@ function renderNewHistory() {
     document.getElementById('history-total-subjects').textContent = totalSubjects;
     document.getElementById('history-avg-session').textContent = formatHistoryTime(avgSessionSeconds);
 
-    // Group by study type (Universidad vs UTN)
+    const distributionContainer = document.getElementById('history-distribution-container');
+    // Clear existing subject distribution sections
+    // Find all existing .distribucion-container elements and remove them
+    const existingDistributionSections = distributionContainer.querySelectorAll('.distribucion-container');
+    existingDistributionSections.forEach(section => section.remove());
+
+    // Weekly Summary Details (new logic)
+    const weeklySummaryDetails = document.getElementById('weekly-summary-details');
+    const weeklyDayGrid = document.getElementById('weekly-day-grid'); // Changed from weeklyDayList
+    const weeklyTotalHoursSpan = document.getElementById('weekly-total-hours');
+
+    if (vista === 'semana') {
+        weeklySummaryDetails.style.display = 'block';
+                weeklyDayGrid.innerHTML = ''; // Clear previous content
+
+        const [year, week] = dateValue.split('-W');
+        const startOfWeek = getStartOfWeek(parseInt(year), parseInt(week));
+        const daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+        const dailyTotals = {};
+        let totalStudyTimeForWeek = 0;
+
+        // Initialize daily totals for the week
+        for (let i = 0; i < 7; i++) {
+            const currentDay = new Date(startOfWeek);
+            currentDay.setDate(startOfWeek.getDate() + i);
+            const dateKey = currentDay.toISOString().split('T')[0]; // YYYY-MM-DD
+            dailyTotals[dateKey] = 0;
+        }
+
+        // Aggregate study time for each day in the filtered history
+        filteredHistory.forEach(p => {
+            const pomodoroDate = new Date(p.timestamp);
+            const dateKey = pomodoroDate.toISOString().split('T')[0]; // YYYY-MM-DD
+            if (dailyTotals.hasOwnProperty(dateKey)) {
+                dailyTotals[dateKey] += (Number(p.workDuration) || 0);
+            }
+        });
+
+        // Render daily breakdown as cards
+        for (let i = 0; i < 7; i++) {
+            const currentDay = new Date(startOfWeek);
+            currentDay.setDate(startOfWeek.getDate() + i);
+            const dateKey = currentDay.toISOString().split('T')[0];
+            const dayName = daysOfWeek[currentDay.getDay()];
+            const totalSecondsForDay = dailyTotals[dateKey] || 0;
+            totalStudyTimeForWeek += totalSecondsForDay;
+
+            const dayCard = document.createElement('div');
+            dayCard.className = 'weekly-day-card';
+            dayCard.innerHTML = `
+                <strong>${dayName}</strong>
+                <span>${currentDay.getDate()}/${currentDay.getMonth() + 1}</span>
+                <span>${formatHistoryTime(totalSecondsForDay)}</span>
+            `;
+            weeklyDayGrid.appendChild(dayCard); // Append to the new grid container
+        }
+
+        // Update weekly total
+        weeklyTotalHoursSpan.textContent = formatHistoryTime(totalStudyTimeForWeek);
+
+        // Append the weekly summary details to the distribution container
+        distributionContainer.appendChild(weeklySummaryDetails);
+
+    } else {
+        weeklySummaryDetails.style.display = 'none';
+    }
+
+    // Group by study type (Universidad vs UTN) - This part remains the same
     const universitySubjects = [
         'Programación Estructurada',
         'Matemática Discreta',
@@ -451,9 +531,6 @@ function renderNewHistory() {
 
     const universityHistory = filteredHistory.filter(item => item.activity && universitySubjects.includes(item.activity));
     const utnHistory = filteredHistory.filter(item => item.activity && !universitySubjects.includes(item.activity));
-
-    const distributionContainer = document.getElementById('history-distribution-container');
-    distributionContainer.innerHTML = ''; // Clear previous content
 
     // Function to create and append a distribution section
     const createDistributionSection = (title, icon, historyData) => {

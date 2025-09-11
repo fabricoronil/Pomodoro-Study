@@ -247,7 +247,6 @@ body {
     display: flex;
     gap: 2rem;
     justify-content: center;
-    margin-bottom: 2rem;
     flex-wrap: wrap;
 }
 
@@ -649,7 +648,13 @@ body {
         flex-wrap: wrap; /* Added to allow elements to wrap */
     }
     .fecha-selector {
-        flex-wrap: wrap; /* Added to allow elements to wrap */
+        flex-direction: column; /* Changed to column to stack days */
+        flex-wrap: wrap; /* Keep flex-wrap for safety */
+        justify-content: space-around; /* Keep distribution */
+    }
+    .fecha-selector > * { /* Select all direct children of .fecha-selector */
+        width: 100%; /* Ensure each day takes full width */
+        box-sizing: border-box; /* Include padding and border in width */
     }
     
 }
@@ -816,4 +821,40 @@ body {
     border-radius: 12px;
     font-size: 12px;
     font-weight: bold;
+}
+
+/* Styles for Weekly Day Grid */
+#weekly-day-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Adjust minmax as needed */
+    gap: 1rem;
+    margin-top: 1.5rem;
+    justify-content: center; /* Center items if they don't fill the row */
+}
+
+.weekly-day-card {
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    border: 2px solid #444;
+    border-radius: 15px;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.weekly-day-card:hover {
+    transform: translateY(-5px);
+    border-color: white;
+    box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+}
+
+.weekly-day-card strong {
+    display: block; /* Make day name and date stack */
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: white;
+}
+
+.weekly-day-card span {
+    font-size: 1rem;
+    color: #ccc;
 }
