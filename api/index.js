@@ -8,7 +8,7 @@ const path = require('path');
 const app = express();
 
 const DB_FILE_PATH = path.join('/tmp', 'db.json');
-const INITIAL_DB_PATH = path.join(process.cwd(), 'api', 'db.json');
+const INITIAL_DB_PATH = path.join(__dirname, 'db.json');
 
 // Initialize the database file
 if (!fs.existsSync(DB_FILE_PATH)) {
