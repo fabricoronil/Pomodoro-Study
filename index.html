@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <!-- El atributo lang="es" le dice al navegador que el idioma principal de la página es español. -->
 <html lang="es">
@@ -17,32 +18,57 @@
     <!-- =================================================================== -->
     <!-- PANTALLA DE BIENVENIDA (#welcomeScreen)                           -->
     <!-- =================================================================== -->
-    <!-- Es la primera pantalla que ve el usuario. La clase "active" la hace visible por defecto. -->
     <div id="welcomeScreen" class="screen active">
         <div class="welcome-container">
             <h1 class="welcome-title">¡Bienvenido Fabri Coronil!</h1>
             <p class="welcome-subtitle">Es hora de trabajar!</p>
-            <!-- Este botón llama a la función showSelection() de JavaScript cuando se le hace clic. -->
-            <button class="continue-btn" onclick="showSelection()">Continuar</button>
-            <button class="continue-btn" onclick="showHistory()">Ver Historial</button>
+            <div class="welcome-buttons">
+                <button class="continue-btn" onclick="showSelection()" id="continueBtn" style="display: none;">Continuar</button>
+                <button class="continue-btn" onclick="showLogin()">Iniciar Sesión</button>
+                <button class="continue-btn" onclick="showHistory()">Ver Historial</button>
+            </div>
         </div>
     </div>
 
     <!-- =================================================================== -->
+    <!-- PANTALLA DE LOGIN (#loginScreen)                                 -->
+    <!-- =================================================================== -->
+    <div id="loginScreen" class="screen">
+        <div class="auth-container">
+            <h2 class="auth-title">Iniciar Sesión</h2>
+            <input type="email" id="loginEmail" placeholder="Email" required>
+            <input type="password" id="loginPassword" placeholder="Contraseña" required>
+            <button class="auth-btn" onclick="login()">Login</button>
+            <p>¿No tienes una cuenta? <a href="#" onclick="showRegister()">Regístrate</a></p>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- PANTALLA DE REGISTRO (#registerScreen)                           -->
+    <!-- =================================================================== -->
+    <div id="registerScreen" class="screen">
+        <div class="auth-container">
+            <h2 class="auth-title">Registro</h2>
+            <input type="email" id="registerEmail" placeholder="Email" required>
+            <input type="password" id="registerPassword" placeholder="Contraseña" required>
+            <button class="auth-btn" onclick="register()">Register</button>
+            <p>¿Ya tienes una cuenta? <a href="#" onclick="showLogin()">Inicia Sesión</a></p>
+        </div>
+    </div>
+
+
+    <!-- =================================================================== -->
     <!-- PANTALLA DE SELECCIÓN DE ESTUDIO (#selectionScreen)             -->
     <!-- =================================================================== -->
-    <!-- En esta pantalla, el usuario elige entre Universidad y UTN. -->
     <div id="selectionScreen" class="screen">
         <div class="selection-container">
             <h2 class="selection-title">Elige tu área de estudio</h2>
             <div class="cards-container">
-                <!-- Tarjeta para Universidad: llama a selectStudy('universidad') -->
                 <div class="study-card" onclick="selectStudy('universidad')">
                     <div class="card-icon">🎓</div>
                     <h3>Universidad Cuenca de la Plata</h3>
                     <p>Ingeniería en Sistemas</p>
                 </div>
-                <!-- Tarjeta para UTN: llama a selectStudy('utn') -->
                 <div class="study-card" onclick="selectStudy('utn')">
                     <div class="card-icon">💻</div>
                     <h3>UTN</h3>
@@ -50,19 +76,17 @@
                 </div>
             </div>
             <button class="back-btn" onclick="goBackToWelcome()">Volver</button>
+            <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
         </div>
     </div>
 
     <!-- =================================================================== -->
     <!-- PANTALLA DE SELECCIÓN DE MATERIAS (#subjectsScreen)              -->
     <!-- =================================================================== -->
-    <!-- Esta pantalla solo se muestra si el usuario elige "Universidad". -->
     <div id="subjectsScreen" class="screen">
         <div class="subjects-container">
             <h2 class="subjects-title">¡Selecciona una materia!</h2>
-            <!-- Una grilla que contiene las tarjetas de cada materia. -->
             <div class="subjects-grid">
-                <!-- Cada tarjeta llama a startPomodoro() con el nombre de la materia. -->
                 <div class="subject-card" onclick="startPomodoro('Programación Estructurada')">
                     <div class="subject-icon">📝</div>
                     <h3>Programación Estructurada</h3>
@@ -80,14 +104,10 @@
                     <h3>Arquitectura de Computadoras</h3>
                 </div>
             </div>
-
-            <!-- NUEVO: Contenedor para el horario semanal completo. -->
             <div class="weekly-schedule" id="weeklySchedule">
                 <h2>Horario Semanal</h2>
                 <div id="weeklyScheduleContent"></div>
             </div>
-
-            <!-- Botón para regresar a la pantalla anterior. -->
             <button class="back-btn" onclick="goBack()">Volver</button>
         </div>
     </div>
@@ -95,13 +115,9 @@
     <!-- =================================================================== -->
     <!-- PANTALLA DEL POMODORO (#pomodoroScreen)                          -->
     <!-- =================================================================== -->
-    <!-- La pantalla principal del temporizador. -->
     <div id="pomodoroScreen" class="screen">
         <div class="pomodoro-container">
-            <!-- Título de la actividad (nombre de la materia) -->
             <h2 id="currentActivity">Sesión de Estudio</h2>
-            
-            <!-- Sección para configurar los tiempos del Pomodoro. -->
             <div class="timer-setup" id="timerSetup">
                 <h3>Configurar Pomodoro</h3>
                 <div class="time-inputs">
@@ -116,43 +132,29 @@
                 </div>
                 <button class="start-btn" onclick="initializeTimer()">Comenzar</button>
             </div>
-
-            <!-- Sección que muestra el temporizador en funcionamiento (círculo, tiempo, etc.). -->
-            <!-- Está oculta por defecto con style="display: none;". -->
             <div class="timer-display" id="timerDisplay" style="display: none;">
                 <div class="timer-circle">
-                    <!-- La barra de progreso que se va llenando. -->
                     <div class="timer-progress" id="timerProgress"></div>
                     <div class="timer-content">
-                        <!-- El tiempo restante. -->
                         <div class="timer-time" id="timerTime">25:00</div>
-                        <!-- El estado actual (TRABAJO o DESCANSO). -->
                         <div class="timer-status" id="timerStatus">TRABAJO</div>
                     </div>
                 </div>
-                
-                <!-- Botones de control del temporizador (play/pausa y reset). -->
                 <div class="timer-controls">
                     <button class="control-btn" id="pauseBtn" onclick="pauseTimer()">Pausar</button>
                     <button class="control-btn" id="resetBtn" onclick="resetTimer()">Restablecer</button>
                     <button class="control-btn" id="finishBtn" onclick="finishTimer()">Terminar</button>
                 </div>
-
-                <!-- Muestra el número de sesiones completadas. -->
                 <div class="session-info">
                     <div class="session-counter">
                         <span>Sesión: <span id="sessionCount">1</span></span>
                     </div>
                 </div>
             </div>
-
-            <!-- NUEVO: Contenedor para el horario de la materia seleccionada. -->
             <div class="subject-schedule" id="subjectSchedule" style="display: none;">
                 <h3>Horario de Cursado</h3>
                 <ul id="scheduleList"></ul>
             </div>
-
-            <!-- Botón de volver movido al final del contenedor -->
             <button class="back-btn" onclick="goBack()">Volver</button>
         </div>
     </div>
@@ -210,11 +212,9 @@
             </div>
 
             <div id="history-distribution-container">
-                <!-- Los datos de distribución se insertarán aquí dinámicamente -->
                 <div id="weekly-summary-details" style="display: none;">
     <h3>Resumen Semanal Detallado</h3>
     <div id="weekly-day-grid">
-        <!-- Daily study cards will be inserted here by JavaScript -->
     </div>
     <p><strong>Total Semanal:</strong> <span id="weekly-total-hours">0h</span></p>
 </div>
@@ -241,11 +241,13 @@
                 <p><strong>Tiempo Total de Trabajo:</strong> <span id="totalStudyTime">0h 0m</span></p>
                 <p><strong>Tiempo Total de Descanso:</strong> <span id="totalBreakTime">0h 0m</span></p>
             </div>
-            <button class="back-btn" onclick="goBackToPomodoro()">Empezar Otro Pomodoro</button>
+            <div class="summary-buttons">
+                <button id="startNextSessionBtn" class="start-btn" onclick="startNextSession()">Iniciar Descanso</button>
+                <button class="back-btn" onclick="goBackToPomodoro()">Volver</button>
+            </div>
         </div>
     </div>
 
-    <!-- Enlace al archivo JavaScript que controla toda la lógica de la aplicación. -->
     <script src="script.js"></script>
 </body>
 </html>

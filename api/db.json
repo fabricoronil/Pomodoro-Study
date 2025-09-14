@@ -1,0 +1,45 @@
+
+{
+  "users": [
+    {
+      "email": "coronilfabri@gmail.com",
+      "password": "fabricio1331"
+    }
+  ],
+  "pomodoros": {
+    "coronilfabri@gmail.com": [
+      {
+        "activity": "Análisis Matemático",
+        "workDuration": 138,
+        "breakDuration": 0,
+        "timestamp": "2025-09-14T19:16:11.870Z",
+        "type": "Trabajo",
+        "completed": "Terminado por usuario"
+      },
+      {
+        "activity": "Desarrollo Web Full Stack",
+        "workDuration": 5,
+        "breakDuration": 0,
+        "timestamp": "2025-09-14T19:17:39.591Z",
+        "type": "Trabajo",
+        "completed": "Terminado por usuario"
+      },
+      {
+        "activity": "Arquitectura de Computadoras",
+        "workDuration": 4,
+        "breakDuration": 0,
+        "timestamp": "2025-09-14T19:23:14.970Z",
+        "type": "Trabajo",
+        "completed": "Terminado por usuario"
+      },
+      {
+        "activity": "Arquitectura de Computadoras",
+        "workDuration": 1,
+        "breakDuration": 0,
+        "timestamp": "2025-09-14T19:27:33.682Z",
+        "type": "Trabajo",
+        "completed": "Terminado por usuario"
+      }
+    ]
+  }
+}

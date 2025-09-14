@@ -13,12 +13,16 @@ let workDuration = 25 * 60;
 let breakDuration = 5 * 60;
 let currentTime = workDuration;
 let sessionCount = 1;
+let naturalCompletion = false;
 
 let pomodoroHistory = [];
 let totalPomodorosCompleted = 0;
 let totalStudyTime = 0; // in seconds
 let totalBreakTime = 0; // in seconds
 let lastPomodoro = null; // Stores details of the last completed pomodoro for summary
+
+let currentUser = null;
+const API_URL = '/api';
 
 // =================================================================================
 // DATOS DE HORARIOS
@@ -102,7 +106,16 @@ function showHistory() {
     renderNewHistory();
 }
 
-function showSummary(pomodoro) {
+function showLogin() {
+    showScreen('loginScreen');
+}
+
+function showRegister() {
+    showScreen('registerScreen');
+}
+
+function showSummary(pomodoro, isNaturalCompletion) {
+    naturalCompletion = isNaturalCompletion;
     showScreen('summaryScreen');
     document.getElementById('summaryActivity').textContent = pomodoro.activity;
     document.getElementById('summaryWorkTime').textContent = formatTime(pomodoro.workDuration);
@@ -112,6 +125,14 @@ function showSummary(pomodoro) {
     document.getElementById('totalPomodoros').textContent = totalPomodorosCompleted;
     document.getElementById('totalStudyTime').textContent = formatTime(totalStudyTime);
     document.getElementById('totalBreakTime').textContent = formatTime(totalBreakTime);
+
+    const nextSessionBtn = document.getElementById('startNextSessionBtn');
+    if (naturalCompletion) {
+        nextSessionBtn.style.display = 'block';
+        nextSessionBtn.textContent = isWorkTime ? 'Iniciar Descanso' : 'Iniciar Trabajo';
+    } else {
+        nextSessionBtn.style.display = 'none';
+    }
 }
 
 function selectStudy(study) {
@@ -192,6 +213,68 @@ function goBackToWelcome() {
 function goBackToPomodoro() {
     showScreen('pomodoroScreen');
     resetTimerSetup();
+}
+
+// =================================================================================
+// AUTHENTICATION FUNCTIONS
+// =================================================================================
+
+async function register() {
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+
+    try {
+        const response = await fetch(`${API_URL}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+        alert(data.message);
+        if (response.ok) {
+            showLogin();
+        }
+    } catch (error) {
+        alert('Error registering user.');
+    }
+}
+
+async function login() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+
+    try {
+        const response = await fetch(`${API_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            currentUser = data.user;
+            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            alert(data.message);
+            document.getElementById('continueBtn').style.display = 'block';
+            document.querySelector('button[onclick="showLogin()"]').style.display = 'none';
+            showSelection();
+            loadHistory();
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        alert('Error logging in.');
+    }
+}
+
+function logout() {
+    currentUser = null;
+    sessionStorage.removeItem('currentUser');
+    pomodoroHistory = [];
+    document.getElementById('continueBtn').style.display = 'none';
+    document.querySelector('button[onclick="showLogin()"]').style.display = 'block';
+    showScreen('welcomeScreen');
 }
 
 // =================================================================================
@@ -291,15 +374,15 @@ function resetTimer() {
     updateDisplay();
 }
 
-function finishTimer() {
+async function finishTimer() {
     pauseTimer();
-    recordPomodoro(true); // true indicates finished by user
-    showSummary(lastPomodoro);
+    await recordPomodoro(true); // true indicates finished by user
+    showSummary(lastPomodoro, false);
 }
 
-function completeSession() {
+async function completeSession() {
     pauseTimer();
-    recordPomodoro(false); // false indicates completed naturally
+    await recordPomodoro(false); // false indicates completed naturally
     
     try {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -318,25 +401,31 @@ function completeSession() {
         console.log('Audio no disponible');
     }
     
+    showSummary(lastPomodoro, true);
+}
+
+function startNextSession() {
     if (isWorkTime) {
         isWorkTime = false;
         currentTime = breakDuration;
-        document.getElementById('timerStatus').textContent = 'DESCANSO';
-        alert('¡Tiempo de trabajo completado! Es hora de descansar.');
     } else {
         isWorkTime = true;
         currentTime = workDuration;
         sessionCount++;
-        document.getElementById('timerStatus').textContent = 'TRABAJO';
-        document.getElementById('sessionCount').textContent = sessionCount;
-        alert('¡Descanso completado! Volvamos al trabajo.');
     }
     
+    document.getElementById('timerStatus').textContent = isWorkTime ? 'TRABAJO' : 'DESCANSO';
+    document.getElementById('sessionCount').textContent = sessionCount;
+    
+    showScreen('pomodoroScreen');
+    document.getElementById('timerSetup').style.display = 'none';
+    document.getElementById('timerDisplay').style.display = 'block';
+
     updateDisplay();
     startTimer();
 }
 
-function recordPomodoro(finishedByUser) {
+async function recordPomodoro(finishedByUser) {
     const pomodoro = {
         activity: currentSubject,
         workDuration: workDuration - currentTime, // Actual work time spent
@@ -352,8 +441,19 @@ function recordPomodoro(finishedByUser) {
     totalBreakTime += (isWorkTime ? 0 : (breakDuration - currentTime));
     lastPomodoro = pomodoro;
 
-    // Optionally save to localStorage
-    saveHistory();
+    if (currentUser) {
+        try {
+            await fetch(`${API_URL}/pomodoros`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: currentUser.email, pomodoro })
+            });
+        } catch (error) {
+            console.error('Failed to save pomodoro to server', error);
+            // Optionally, save to local storage as a fallback
+        }
+    }
+
     renderNewHistory(); // Add this call to update history view
 }
 
@@ -599,30 +699,19 @@ function formatTime(seconds) {
     return result.trim();
 }
 
-function saveHistory() {
-    localStorage.setItem('pomodoroHistory', JSON.stringify(pomodoroHistory));
-    localStorage.setItem('totalPomodorosCompleted', totalPomodorosCompleted);
-    localStorage.setItem('totalStudyTime', totalStudyTime);
-    localStorage.setItem('totalBreakTime', totalBreakTime);
-}
-
-function loadHistory() {
-    const savedHistory = localStorage.getItem('pomodoroHistory');
-    const savedTotalPomodoros = localStorage.getItem('totalPomodorosCompleted');
-    const savedTotalStudyTime = localStorage.getItem('totalStudyTime');
-    const savedTotalBreakTime = localStorage.getItem('totalBreakTime');
-
-    if (savedHistory) {
-        pomodoroHistory = JSON.parse(savedHistory);
-    }
-    if (savedTotalPomodoros) {
-        totalPomodorosCompleted = parseInt(savedTotalPomodoros);
-    }
-    if (savedTotalStudyTime) {
-        totalStudyTime = parseInt(savedTotalStudyTime);
-    }
-    if (savedTotalBreakTime) {
-        totalBreakTime = parseInt(savedTotalBreakTime);
+async function loadHistory() {
+    if (currentUser) {
+        try {
+            const response = await fetch(`${API_URL}/pomodoros/${currentUser.email}`);
+            if (response.ok) {
+                pomodoroHistory = await response.json();
+                renderNewHistory();
+            } else {
+                console.error('Failed to load history from server');
+            }
+        } catch (error) {
+            console.error('Error loading history from server', error);
+        }
     }
 }
 
@@ -694,7 +783,14 @@ function restoreTimerState() {
 // =================================================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    loadHistory();
+    const savedUser = sessionStorage.getItem('currentUser');
+    if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        document.getElementById('continueBtn').style.display = 'block';
+        document.querySelector('button[onclick="showLogin()"]').style.display = 'none';
+        loadHistory();
+    }
+
     currentScreen = 'welcome';
 
     // Initialize Web Worker
