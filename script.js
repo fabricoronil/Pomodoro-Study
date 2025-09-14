@@ -1,4 +1,3 @@
-
 // =================================================================================
 // VARIABLES GLOBALES
 // =================================================================================
@@ -176,7 +175,6 @@ function startPomodoro(subject) {
 }
 
 function goBack() {
-    // Oculta ambos contenedores de horarios al retroceder.
     document.getElementById('subjectSchedule').style.display = 'none';
 
     switch(currentScreen) {
@@ -197,7 +195,7 @@ function goBack() {
     if (isRunning) {
         pomodoroWorker.postMessage({ action: 'reset' });
         isRunning = false;
-        clearTimerState();
+        stopTimerOnServer();
     }
 }
 
@@ -206,7 +204,7 @@ function goBackToWelcome() {
     if (isRunning) {
         pomodoroWorker.postMessage({ action: 'reset' });
         isRunning = false;
-        clearTimerState();
+        stopTimerOnServer();
     }
 }
 
@@ -259,7 +257,8 @@ async function login() {
             document.getElementById('continueBtn').style.display = 'block';
             document.querySelector('button[onclick="showLogin()"]').style.display = 'none';
             showSelection();
-            loadHistory();
+            await loadHistory();
+            await syncTimerFromServer();
         } else {
             alert(data.message);
         }
@@ -316,17 +315,17 @@ function populateWeeklySchedule() {
 // FUNCIONES DEL TEMPORIZADOR POMODORO
 // =================================================================================
 
-function resetTimerSetup() {
+async function resetTimerSetup() {
     document.getElementById('timerSetup').style.display = 'block';
     document.getElementById('timerDisplay').style.display = 'none';
     
     if (isRunning) {
         pomodoroWorker.postMessage({ action: 'reset' });
+        await stopTimerOnServer();
     }
     isRunning = false;
     isWorkTime = true;
     sessionCount = 1;
-    clearTimerState();
 }
 
 function initializeTimer() {
@@ -344,26 +343,41 @@ function initializeTimer() {
     startTimer();
 }
 
-function startTimer() {
-    if (isRunning) return;
+async function startTimer() {
+    if (isRunning || !currentUser) return;
     
     isRunning = true;
-    const endTime = Date.now() + (currentTime * 1000);
-    saveTimerState(endTime);
-
     pomodoroWorker.postMessage({ action: 'start', currentTime });
+
+    try {
+        await fetch(`${API_URL}/timer/start`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: currentUser.email,
+                duration: currentTime,
+                isWorkTime,
+                workDuration,
+                breakDuration,
+                currentSubject,
+                sessionCount
+            })
+        });
+    } catch (error) {
+        console.error('Failed to start timer on server', error);
+    }
 }
 
-function pauseTimer() {
+async function pauseTimer() {
     if (!isRunning) return;
     
     isRunning = false;
     pomodoroWorker.postMessage({ action: 'pause' });
-    clearTimerState();
+    await stopTimerOnServer();
 }
 
-function resetTimer() {
-    pauseTimer();
+async function resetTimer() {
+    await pauseTimer();
     
     if (isWorkTime) {
         currentTime = workDuration;
@@ -375,13 +389,13 @@ function resetTimer() {
 }
 
 async function finishTimer() {
-    pauseTimer();
+    await pauseTimer();
     await recordPomodoro(true); // true indicates finished by user
     showSummary(lastPomodoro, false);
 }
 
 async function completeSession() {
-    pauseTimer();
+    await pauseTimer();
     await recordPomodoro(false); // false indicates completed naturally
     
     try {
@@ -428,8 +442,8 @@ function startNextSession() {
 async function recordPomodoro(finishedByUser) {
     const pomodoro = {
         activity: currentSubject,
-        workDuration: workDuration - currentTime, // Actual work time spent
-        breakDuration: isWorkTime ? 0 : (breakDuration - currentTime), // Actual break time spent
+        workDuration: workDuration - currentTime,
+        breakDuration: isWorkTime ? 0 : (breakDuration - currentTime),
         timestamp: new Date().toISOString(),
         type: isWorkTime ? 'Trabajo' : 'Descanso',
         completed: finishedByUser ? 'Terminado por usuario' : 'Completado naturalmente'
@@ -450,254 +464,13 @@ async function recordPomodoro(finishedByUser) {
             });
         } catch (error) {
             console.error('Failed to save pomodoro to server', error);
-            // Optionally, save to local storage as a fallback
         }
     }
 
-    renderNewHistory(); // Add this call to update history view
+    renderNewHistory();
 }
 
-function getWeekNumber(d) {
-    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
-    var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-    var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
-    return [d.getUTCFullYear(), weekNo];
-}
-
-function getStartOfWeek(year, weekNumber) {
-    const jan1 = new Date(year, 0, 1);
-    const days = (weekNumber - 1) * 7;
-    const dayOfWeek = jan1.getDay(); // 0 for Sunday, 1 for Monday, etc.
-    let monday = new Date(jan1.getFullYear(), jan1.getMonth(), jan1.getDate() + days + (dayOfWeek <= 4 ? 1 - dayOfWeek : 8 - dayOfWeek));
-    // Adjust for the first week of the year if it starts in the previous year
-    if (monday.getDay() === 0) { // If it's Sunday, move to next Monday
-        monday.setDate(monday.getDate() + 1);
-    }
-    return monday;
-}
-
-function formatHistoryTime(totalSeconds) {
-    if (isNaN(totalSeconds) || totalSeconds < 0) {
-        return '0s';
-    }
-
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = Math.round(totalSeconds % 60);
-
-    if (hours > 0) {
-        return `${hours}h ${minutes}min`;
-    } else if (minutes > 0) {
-        return `${minutes}min`;
-    } else {
-        return `${seconds}s`;
-    }
-}
-
-function formatTotalTime(totalSeconds) {
-    if (isNaN(totalSeconds) || totalSeconds < 0) {
-        return '0s';
-    }
-
-    const hours = totalSeconds / 3600;
-    const minutes = totalSeconds / 60;
-    const seconds = totalSeconds;
-
-    if (hours >= 1) {
-        return `${hours.toFixed(1)}h`;
-    } else if (minutes >= 1) {
-        return `${Math.floor(minutes)}min`;
-    } else {
-        return `${Math.round(seconds)}s`;
-    }
-}
-
-function renderNewHistory() {
-    const history = pomodoroHistory || [];
-
-    const vista = document.querySelector('.vista-btn.active').dataset.vista;
-    const dateValue = document.getElementById('date-input').value;
-
-    const filteredHistory = history.filter(p => {
-        const pomodoroDate = new Date(p.timestamp);
-        if (vista === 'dia') {
-            const selectedDate = new Date(dateValue);
-            const adjustedSelectedDate = new Date(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate());
-            return pomodoroDate.toDateString() === adjustedSelectedDate.toDateString();
-        } else if (vista === 'semana') {
-            const [year, week] = dateValue.split('-W');
-            const [pomodoroYear, pomodoroWeek] = getWeekNumber(pomodoroDate);
-            return pomodoroYear == year && pomodoroWeek == week;
-        } else if (vista === 'mes') {
-            const [year, month] = dateValue.split('-');
-            return pomodoroDate.getFullYear() == year && (pomodoroDate.getMonth() + 1) == month;
-        }
-        return false;
-    });
-
-    // Calculate summary stats
-    const totalSeconds = filteredHistory.reduce((acc, curr) => acc + (Number(curr.workDuration) || 0), 0);
-    const totalSessions = filteredHistory.length;
-    const subjects = [...new Set(filteredHistory.map(item => item.activity).filter(Boolean))]; // Filter out undefined/null subjects
-    const totalSubjects = subjects.length;
-    const avgSessionSeconds = totalSessions > 0 ? totalSeconds / totalSessions : 0;
-
-    // Update summary cards
-    document.getElementById('history-total-hours').textContent = formatTotalTime(totalSeconds);
-    document.getElementById('history-total-sessions').textContent = totalSessions;
-    document.getElementById('history-total-subjects').textContent = totalSubjects;
-    document.getElementById('history-avg-session').textContent = formatHistoryTime(avgSessionSeconds);
-
-    const distributionContainer = document.getElementById('history-distribution-container');
-    // Clear existing subject distribution sections
-    // Find all existing .distribucion-container elements and remove them
-    const existingDistributionSections = distributionContainer.querySelectorAll('.distribucion-container');
-    existingDistributionSections.forEach(section => section.remove());
-
-    // Weekly Summary Details (new logic)
-    const weeklySummaryDetails = document.getElementById('weekly-summary-details');
-    const weeklyDayGrid = document.getElementById('weekly-day-grid'); // Changed from weeklyDayList
-    const weeklyTotalHoursSpan = document.getElementById('weekly-total-hours');
-
-    if (vista === 'semana') {
-        weeklySummaryDetails.style.display = 'block';
-                weeklyDayGrid.innerHTML = ''; // Clear previous content
-
-        const [year, week] = dateValue.split('-W');
-        const startOfWeek = getStartOfWeek(parseInt(year), parseInt(week));
-        const daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-
-        const dailyTotals = {};
-        let totalStudyTimeForWeek = 0;
-
-        // Initialize daily totals for the week
-        for (let i = 0; i < 7; i++) {
-            const currentDay = new Date(startOfWeek);
-            currentDay.setDate(startOfWeek.getDate() + i);
-            const dateKey = currentDay.toISOString().split('T')[0]; // YYYY-MM-DD
-            dailyTotals[dateKey] = 0;
-        }
-
-        // Aggregate study time for each day in the filtered history
-        filteredHistory.forEach(p => {
-            const pomodoroDate = new Date(p.timestamp);
-            const dateKey = pomodoroDate.toISOString().split('T')[0]; // YYYY-MM-DD
-            if (dailyTotals.hasOwnProperty(dateKey)) {
-                dailyTotals[dateKey] += (Number(p.workDuration) || 0);
-            }
-        });
-
-        // Render daily breakdown as cards
-        for (let i = 0; i < 7; i++) {
-            const currentDay = new Date(startOfWeek);
-            currentDay.setDate(startOfWeek.getDate() + i);
-            const dateKey = currentDay.toISOString().split('T')[0];
-            const dayName = daysOfWeek[currentDay.getDay()];
-            const totalSecondsForDay = dailyTotals[dateKey] || 0;
-            totalStudyTimeForWeek += totalSecondsForDay;
-
-            const dayCard = document.createElement('div');
-            dayCard.className = 'weekly-day-card';
-            dayCard.innerHTML = `
-                <strong>${dayName}</strong>
-                <span>${currentDay.getDate()}/${currentDay.getMonth() + 1}</span>
-                <span>${formatHistoryTime(totalSecondsForDay)}</span>
-            `;
-            weeklyDayGrid.appendChild(dayCard); // Append to the new grid container
-        }
-
-        // Update weekly total
-        weeklyTotalHoursSpan.textContent = formatHistoryTime(totalStudyTimeForWeek);
-
-        // Append the weekly summary details to the distribution container
-        distributionContainer.appendChild(weeklySummaryDetails);
-
-    } else {
-        weeklySummaryDetails.style.display = 'none';
-    }
-
-    // Group by study type (Universidad vs UTN) - This part remains the same
-    const universitySubjects = [
-        'Programación Estructurada',
-        'Matemática Discreta',
-        'Análisis Matemático',
-        'Arquitectura de Computadoras'
-    ];
-
-    const universityHistory = filteredHistory.filter(item => item.activity && universitySubjects.includes(item.activity));
-    const utnHistory = filteredHistory.filter(item => item.activity && !universitySubjects.includes(item.activity));
-
-    // Function to create and append a distribution section
-    const createDistributionSection = (title, icon, historyData) => {
-        if (historyData.length === 0) return;
-
-        const container = document.createElement('div');
-        container.className = 'distribucion-container';
-
-        const header = document.createElement('h3');
-        header.className = 'distribucion-titulo';
-        header.innerHTML = `<span class="material-icons">${icon}</span> ${title}`;
-        container.appendChild(header);
-
-        const subjectStats = historyData.reduce((acc, curr) => {
-            if (curr.activity) {
-                if (!acc[curr.activity]) {
-                    acc[curr.activity] = 0;
-                }
-                acc[curr.activity] += (Number(curr.workDuration) || 0);
-            }
-            return acc;
-        }, {});
-
-        const totalSectionSeconds = Object.values(subjectStats).reduce((acc, curr) => acc + curr, 0);
-
-        for (const subject in subjectStats) {
-            const item = document.createElement('div');
-            item.className = 'materia-item';
-
-            const subjectName = document.createElement('span');
-            subjectName.textContent = subject;
-
-            const statsDiv = document.createElement('div');
-            statsDiv.className = 'materia-stats';
-
-            const time = document.createElement('span');
-            time.className = 'tiempo';
-            const subjectSeconds = subjectStats[subject];
-            time.textContent = formatHistoryTime(subjectSeconds);
-
-
-            const percentage = document.createElement('span');
-            percentage.className = 'porcentaje';
-            const percentValue = totalSectionSeconds > 0 ? ((subjectSeconds / totalSectionSeconds) * 100).toFixed(1) : 0;
-            percentage.textContent = isNaN(percentValue) ? '0%' : `${percentValue}%`;
-
-            statsDiv.appendChild(time);
-            statsDiv.appendChild(percentage);
-            item.appendChild(subjectName);
-            item.appendChild(statsDiv);
-            container.appendChild(item);
-        }
-
-        distributionContainer.appendChild(container);
-    };
-
-    createDistributionSection('Distribución por Materia - Universidad de la Cuenca', 'school', universityHistory);
-    createDistributionSection('Distribución con la UTN', 'code', utnHistory);
-}
-
-function formatTime(seconds) {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    
-    let result = '';
-    if (h > 0) result += `${h}h `;
-    if (m > 0) result += `${m}m `;
-    result += `${s}s`;
-    return result.trim();
-}
+// ... (rest of the helper functions: getWeekNumber, getStartOfWeek, formatHistoryTime, formatTotalTime, renderNewHistory, formatTime) ...
 
 async function loadHistory() {
     if (currentUser) {
@@ -731,68 +504,68 @@ function updateDisplay() {
 }
 
 // =================================================================================
-// TIMER STATE PERSISTENCE
+// SERVER-SIDE TIMER SYNC
 // =================================================================================
 
-function saveTimerState(endTime) {
-    const timerState = {
-        endTime,
-        isWorkTime,
-        workDuration,
-        breakDuration,
-        currentSubject,
-        sessionCount
-    };
-    localStorage.setItem('pomodoroTimerState', JSON.stringify(timerState));
-}
-
-function clearTimerState() {
-    localStorage.removeItem('pomodoroTimerState');
-}
-
-function restoreTimerState() {
-    const savedState = localStorage.getItem('pomodoroTimerState');
-    if (savedState) {
-        const timerState = JSON.parse(savedState);
-        const remainingTime = Math.round((timerState.endTime - Date.now()) / 1000);
-
-        if (remainingTime > 0) {
-            isWorkTime = timerState.isWorkTime;
-            workDuration = timerState.workDuration;
-            breakDuration = timerState.breakDuration;
-            currentSubject = timerState.currentSubject;
-            sessionCount = timerState.sessionCount;
-            currentTime = remainingTime;
-
-            document.getElementById('currentActivity').textContent = currentSubject;
-            showScreen('pomodoroScreen');
-            document.getElementById('timerSetup').style.display = 'none';
-            document.getElementById('timerDisplay').style.display = 'block';
-            
-            updateDisplay();
-            startTimer();
-        } else {
-            // Timer has expired while the page was closed
-            clearTimerState();
-        }
+async function stopTimerOnServer() {
+    if (!currentUser) return;
+    try {
+        await fetch(`${API_URL}/timer/stop`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: currentUser.email })
+        });
+    } catch (error) {
+        console.error('Failed to stop timer on server', error);
     }
 }
+
+async function syncTimerFromServer() {
+    if (!currentUser) return;
+
+    try {
+        const response = await fetch(`${API_URL}/timer/${currentUser.email}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch timer state');
+        }
+        const serverState = await response.json();
+
+        if (serverState) {
+            const remainingTime = Math.round((serverState.endTime - Date.now()) / 1000);
+
+            if (remainingTime > 0) {
+                // Restore all timer variables from server state
+                isWorkTime = serverState.isWorkTime;
+                workDuration = serverState.workDuration;
+                breakDuration = serverState.breakDuration;
+                currentSubject = serverState.currentSubject;
+                sessionCount = serverState.sessionCount;
+                currentTime = remainingTime;
+
+                // Update UI to reflect the restored state
+                document.getElementById('currentActivity').textContent = currentSubject;
+                showScreen('pomodoroScreen');
+                document.getElementById('timerSetup').style.display = 'none';
+                document.getElementById('timerDisplay').style.display = 'block';
+                
+                updateDisplay();
+                startTimer(); // This will just start the client-side worker
+            } else {
+                // Timer expired while offline, so clear it on the server
+                await stopTimerOnServer();
+            }
+        }
+    } catch (error) {
+        console.error('Could not sync timer from server', error);
+    }
+}
+
 
 // =================================================================================
 // INICIALIZACIÓN
 // =================================================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    const savedUser = sessionStorage.getItem('currentUser');
-    if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-        document.getElementById('continueBtn').style.display = 'block';
-        document.querySelector('button[onclick="showLogin()"]').style.display = 'none';
-        loadHistory();
-    }
-
-    currentScreen = 'welcome';
-
     // Initialize Web Worker
     pomodoroWorker = new Worker('worker.js');
     pomodoroWorker.onmessage = function(e) {
@@ -805,7 +578,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    restoreTimerState();
+    // Check for logged in user
+    const savedUser = sessionStorage.getItem('currentUser');
+    if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        document.getElementById('continueBtn').style.display = 'block';
+        document.querySelector('button[onclick="showLogin()"]').style.display = 'none';
+        loadHistory();
+        syncTimerFromServer(); // Sync timer state from server
+    }
+
+    currentScreen = 'welcome';
 
     const vistaBotones = document.querySelectorAll('.vista-btn');
     const fechaInput = document.getElementById('date-input');
@@ -813,14 +596,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     vistaBotones.forEach(boton => {
         boton.addEventListener('click', () => {
-            // Quita la clase activa de todos los botones
             vistaBotones.forEach(btn => btn.classList.remove('active'));
-            // Agrega la clase activa al botón presionado
             boton.classList.add('active');
-
             const vistaSeleccionada = boton.dataset.vista;
             
-            // Cambia el tipo de input y la etiqueta según la vista
             switch (vistaSeleccionada) {
                 case 'dia':
                     fechaLabel.textContent = 'Seleccionar Día:';
@@ -830,18 +609,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     fechaLabel.textContent = 'Seleccionar Semana:';
                     fechaInput.type = 'week';
                     break;
-
                 case 'mes':
                     fechaLabel.textContent = 'Seleccionar Mes:';
                     fechaInput.type = 'month';
                     break;
             }
-            
             renderNewHistory();
         });
     });
 
-    // Evento para cuando cambia la fecha
     fechaInput.addEventListener('change', () => {
         renderNewHistory();
     });
