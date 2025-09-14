@@ -1,3 +1,4 @@
+
 // =================================================================================
 // VARIABLES GLOBALES
 // =================================================================================
@@ -5,7 +6,7 @@
 let currentScreen = 'welcome';
 let currentStudy = '';
 let currentSubject = '';
-let timer = null;
+let pomodoroWorker = null; // Web Worker for the timer
 let isRunning = false;
 let isWorkTime = true;
 let workDuration = 25 * 60;
@@ -172,19 +173,19 @@ function goBack() {
             showScreen('selectionScreen');
     }
     
-    if (timer) {
-        clearInterval(timer);
-        timer = null;
+    if (isRunning) {
+        pomodoroWorker.postMessage({ action: 'reset' });
         isRunning = false;
+        clearTimerState();
     }
 }
 
 function goBackToWelcome() {
     showScreen('welcomeScreen');
-    if (timer) {
-        clearInterval(timer);
-        timer = null;
+    if (isRunning) {
+        pomodoroWorker.postMessage({ action: 'reset' });
         isRunning = false;
+        clearTimerState();
     }
 }
 
@@ -236,13 +237,13 @@ function resetTimerSetup() {
     document.getElementById('timerSetup').style.display = 'block';
     document.getElementById('timerDisplay').style.display = 'none';
     
-    if (timer) {
-        clearInterval(timer);
-        timer = null;
+    if (isRunning) {
+        pomodoroWorker.postMessage({ action: 'reset' });
     }
     isRunning = false;
     isWorkTime = true;
     sessionCount = 1;
+    clearTimerState();
 }
 
 function initializeTimer() {
@@ -264,23 +265,18 @@ function startTimer() {
     if (isRunning) return;
     
     isRunning = true;
-    
-    timer = setInterval(() => {
-        currentTime--;
-        updateDisplay();
-        
-        if (currentTime <= 0) {
-            completeSession();
-        }
-    }, 1000);
+    const endTime = Date.now() + (currentTime * 1000);
+    saveTimerState(endTime);
+
+    pomodoroWorker.postMessage({ action: 'start', currentTime });
 }
 
 function pauseTimer() {
     if (!isRunning) return;
     
     isRunning = false;
-    clearInterval(timer);
-    timer = null;
+    pomodoroWorker.postMessage({ action: 'pause' });
+    clearTimerState();
 }
 
 function resetTimer() {
@@ -646,12 +642,74 @@ function updateDisplay() {
 }
 
 // =================================================================================
+// TIMER STATE PERSISTENCE
+// =================================================================================
+
+function saveTimerState(endTime) {
+    const timerState = {
+        endTime,
+        isWorkTime,
+        workDuration,
+        breakDuration,
+        currentSubject,
+        sessionCount
+    };
+    localStorage.setItem('pomodoroTimerState', JSON.stringify(timerState));
+}
+
+function clearTimerState() {
+    localStorage.removeItem('pomodoroTimerState');
+}
+
+function restoreTimerState() {
+    const savedState = localStorage.getItem('pomodoroTimerState');
+    if (savedState) {
+        const timerState = JSON.parse(savedState);
+        const remainingTime = Math.round((timerState.endTime - Date.now()) / 1000);
+
+        if (remainingTime > 0) {
+            isWorkTime = timerState.isWorkTime;
+            workDuration = timerState.workDuration;
+            breakDuration = timerState.breakDuration;
+            currentSubject = timerState.currentSubject;
+            sessionCount = timerState.sessionCount;
+            currentTime = remainingTime;
+
+            document.getElementById('currentActivity').textContent = currentSubject;
+            showScreen('pomodoroScreen');
+            document.getElementById('timerSetup').style.display = 'none';
+            document.getElementById('timerDisplay').style.display = 'block';
+            
+            updateDisplay();
+            startTimer();
+        } else {
+            // Timer has expired while the page was closed
+            clearTimerState();
+        }
+    }
+}
+
+// =================================================================================
 // INICIALIZACIÓN
 // =================================================================================
 
 document.addEventListener('DOMContentLoaded', function() {
     loadHistory();
     currentScreen = 'welcome';
+
+    // Initialize Web Worker
+    pomodoroWorker = new Worker('worker.js');
+    pomodoroWorker.onmessage = function(e) {
+        const { type, currentTime: newCurrentTime } = e.data;
+        if (type === 'tick') {
+            currentTime = newCurrentTime;
+            updateDisplay();
+        } else if (type === 'completed') {
+            completeSession();
+        }
+    };
+
+    restoreTimerState();
 
     const vistaBotones = document.querySelectorAll('.vista-btn');
     const fechaInput = document.getElementById('date-input');
