@@ -1,7 +1,6 @@
 console.log('API Function Started');
 
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
@@ -29,7 +28,7 @@ try {
 }
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
 const readDB = () => {
     const data = fs.readFileSync(DB_FILE_PATH);
