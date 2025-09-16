@@ -44,7 +44,7 @@ const writeDB = (data) => {
 // AUTH ROUTES
 // =================================================================================
 
-app.post('/api/register', (req, res) => {
+app.post('/register', (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) {
@@ -66,7 +66,7 @@ app.post('/api/register', (req, res) => {
     }
 });
 
-app.post('/api/login', (req, res) => {
+app.post('/login', (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) {
@@ -90,7 +90,7 @@ app.post('/api/login', (req, res) => {
 // POMODORO HISTORY ROUTES
 // =================================================================================
 
-app.get('/api/pomodoros/:email', (req, res) => {
+app.get('/pomodoros/:email', (req, res) => {
     try {
         const { email } = req.params;
         const db = readDB();
@@ -104,7 +104,7 @@ app.get('/api/pomodoros/:email', (req, res) => {
     }
 });
 
-app.post('/api/pomodoros', (req, res) => {
+app.post('/pomodoros', (req, res) => {
     try {
         const { email, pomodoro } = req.body;
         if (!email || !pomodoro) {
@@ -127,7 +127,7 @@ app.post('/api/pomodoros', (req, res) => {
 // TIMER STATE ROUTES
 // =================================================================================
 
-app.post('/api/timer/start', (req, res) => {
+app.post('/timer/start', (req, res) => {
     try {
         const { email, duration, isWorkTime, workDuration, breakDuration, currentSubject, sessionCount } = req.body;
         if (!email || !duration) {
@@ -153,7 +153,7 @@ app.post('/api/timer/start', (req, res) => {
     }
 });
 
-app.get('/api/timer/:email', (req, res) => {
+app.get('/timer/:email', (req, res) => {
     try {
         const { email } = req.params;
         const db = readDB();
@@ -169,7 +169,7 @@ app.get('/api/timer/:email', (req, res) => {
     }
 });
 
-app.post('/api/timer/stop', (req, res) => {
+app.post('/timer/stop', (req, res) => {
     try {
         const { email } = req.body;
         if (!email) {
